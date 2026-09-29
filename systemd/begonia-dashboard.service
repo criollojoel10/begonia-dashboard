@@ -1,0 +1,79 @@
+# Begonia Dashboard — hardened single-unit deployment
+#
+# Install to /etc/systemd/system/begonia-dashboard.service and enable it:
+#
+#   sudo install -Dm644 systemd/begonia-dashboard.service \
+#        /etc/systemd/system/begonia-dashboard.service
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now begonia-dashboard.service
+#
+# The service binds to loopback only. Publish it to the tailnet with
+# `sudo tailscale serve --bg http://127.0.0.1:8787` instead of binding 0.0.0.0.
+#
+# No Group= is set on purpose: systemd then uses the primary group from
+# /etc/passwd (`users` on Arch Linux ARM, where a per-user group does not
+# exist). Setting Group=joel would make the unit fail to start there.
+#
+# Override the deployment user or secrets without editing this file by
+# dropping a file in /etc/systemd/system/begonia-dashboard.service.d/.
+
+[Unit]
+Description=Begonia Dashboard (Linux device monitoring and administration)
+Documentation=https://github.com/criollojoel10/begonia-dashboard
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=joel
+WorkingDirectory=/opt/begonia-dashboard
+
+# Optional drop-in for secrets, e.g. BEGONIA_SECRET_KEY=... (mode 0600).
+EnvironmentFile=-/etc/begonia-dashboard.env
+
+Environment=PYTHONUNBUFFERED=1
+Environment=BEGONIA_HOST=127.0.0.1
+Environment=BEGONIA_PORT=8787
+
+# sudo is only reachable for an interactive user session; the dashboard opens
+# it through the local PAM stack, so no daemon or socket activation is needed.
+ExecStart=/opt/begonia-dashboard/.venv/bin/python -m uvicorn dashboard.main:app \
+    --host 127.0.0.1 \
+    --port 8787 \
+    --workers 1 \
+    --proxy-headers
+
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=10s
+
+# --- Privilege escalation ---
+# NoNewPrivileges must remain "no". The dashboard elevates through sudo and
+# authenticates through the PAM stack (unix_chkpwd); both are blocked by the
+# no-new-privileges bit, which would silently break every administrative
+# action while leaving monitoring working.
+NoNewPrivileges=no
+
+# --- Sandboxing ---
+# PrivateTmp is safe: the dashboard keeps its state in memory and writes no
+# temporary files that other processes need to see.
+PrivateTmp=yes
+# ProtectSystem and ProtectHome are deliberately left at their defaults.
+# `pacman -Syu` writes to /var and /etc (ProtectSystem=full would make both
+# read-only), and the user-management pages read and edit users' SSH
+# authorized_keys (ProtectHome=read-only would block that). Tighten these only
+# after the privileged operations have been moved behind a dedicated helper.
+
+# --- Resource limits (phone-class hardware, 6 GB RAM) ---
+MemoryHigh=220M
+MemoryMax=320M
+CPUQuota=75%
+TasksMax=64
+
+# --- Logging ---
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=begonia-dashboard
+
+[Install]
+WantedBy=multi-user.target
