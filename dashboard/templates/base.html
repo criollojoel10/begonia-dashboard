@@ -3,13 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Lavender{% endblock %}</title>
-    <meta name="description" content="Real-time Linux device monitoring dashboard for {{ device_info.model }}">
+    <title>{% block title %}{{ app_name }}{% endblock %}</title>
+    <meta name="description" content="{{ app_name }} — real-time Linux device monitoring for {{ device_info.model }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css?v={{ git_hash }}">
     <link rel="stylesheet" href="/static/live.css?v={{ git_hash }}">
+    <!-- Begonia identity layer: loaded last so it wins over upstream tokens.
+         Removing this line restores the stock Lavender look. -->
+    <link rel="stylesheet" href="/static/begonia.css?v={{ git_hash }}">
     {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -24,9 +27,14 @@
                 </svg>
             </div>
             <div class="brand">
-                <h1>Lavender</h1>
+                <h1>{{ app_short_name }}</h1>
                 <span class="subtitle" title="{{ device_info.model }}">{{ device_info.model }}</span>
+                <span class="brand-identity">{{ app_identity }}</span>
             </div>
+        </div>
+
+        <div class="brand-badges" aria-label="Runtime capabilities">
+            {% for badge in brand_badges %}<span class="brand-badge">{{ badge }}</span>{% endfor %}
         </div>
 
         <nav class="nav">
@@ -92,8 +100,15 @@
         </nav>
 
         <div class="sidebar-footer">
-            <span class="version" title="Lavender v{{ app_version }}">v{{ app_version }}</span>
-            <span class="sidebar-os" title="{{ device_info.os_pretty }}">{{ device_info.os_name }}</span>
+            <div class="sidebar-credit">
+                Derived from
+                <a href="{{ upstream_url }}" target="_blank" rel="noopener noreferrer" title="Upstream project by {{ upstream_author }}">{{ upstream_name }}</a>
+                by {{ upstream_author }} · {{ upstream_license if upstream_license is defined else "MIT" }}
+            </div>
+            <div class="sidebar-meta">
+                <span class="version" title="{{ app_name }} v{{ app_version }}">v{{ app_version }}</span>
+                <span class="sidebar-os" title="{{ device_info.os_pretty }}">{{ device_info.os_name }}</span>
+            </div>
         </div>
     </aside>
 
@@ -101,6 +116,9 @@
     <main class="main">
         <header class="topbar">
             <h2 class="page-title">{% block page_title %}Overview{% endblock %}</h2>
+            <span class="topbar-device" title="{{ device_info.model }} · {{ device_info.os_pretty }}">
+                {{ app_subtitle }}{% if device_info.soc_short %} · {{ device_info.soc_short }}{% endif %}
+            </span>
             <div class="topbar-actions">
                 {% if request.url.path == '/' %}
                 <span id="sse-status" class="">

@@ -1,0 +1,595 @@
+/**
+ * Begonia Dashboard — visual identity layer
+ * ------------------------------------------------------------------
+ * Loaded after style.css and live.css. It does two things and nothing
+ * else:
+ *
+ *   1. Re-maps the upstream design tokens (including the historical
+ *      --lavender-* names that style.css still uses internally) to the
+ *      Begonia palette, so every existing component changes colour
+ *      without editing 4900 lines of upstream CSS.
+ *   2. Adds the new Begonia widgets: KPI cards, health verdict, zram,
+ *      PSI pressure, CPU clusters and the Vivi-AI service panel.
+ *
+ * Kept separate on purpose: deleting this file plus its two <link>
+ * tags fully restores the upstream look. Palette: dark petrol blue,
+ * cyan and violet.
+ */
+
+/* ==================================================================
+   1. Design tokens
+   ================================================================== */
+
+:root {
+    /* Begonia palette */
+    --begonia-bg: #06111f;
+    --begonia-sidebar: #081829;
+    --begonia-surface: #0d1d31;
+    --begonia-surface-raised: #10243c;
+    --begonia-border: #1d3a58;
+
+    --begonia-cyan: #57d3f2;
+    --begonia-blue: #4c8dff;
+    --begonia-violet: #9b6cff;
+    --begonia-green: #62d394;
+    --begonia-yellow: #f4bd50;
+    --begonia-orange: #ff8a3d;
+    --begonia-red: #ff5c6c;
+
+    --begonia-text: #dbeafe;
+    --begonia-text-muted: #7f9dbd;
+    --begonia-text-faint: #4e6f91;
+
+    --begonia-radius-sm: 8px;
+    --begonia-radius-md: 12px;
+    --begonia-radius-lg: 16px;
+
+    --begonia-shadow: 0 12px 35px rgba(0, 0, 0, 0.28);
+    --begonia-glow: 0 0 24px rgba(87, 211, 242, 0.12);
+
+    /* --- Upstream tokens re-mapped --- */
+    --bg-base: var(--begonia-bg);
+    --bg-primary: var(--begonia-sidebar);
+    --bg-secondary: var(--begonia-surface);
+    --bg-card: rgba(13, 29, 49, 0.72);
+    --bg-card-hover: rgba(16, 36, 60, 0.9);
+    --bg-elevated: rgba(16, 36, 60, 0.85);
+    --bg-input: rgba(8, 24, 41, 0.85);
+
+    --border: var(--begonia-border);
+    --border-subtle: rgba(29, 58, 88, 0.45);
+    --border-accent: rgba(87, 211, 242, 0.4);
+
+    --text-primary: var(--begonia-text);
+    --text-secondary: var(--begonia-text-muted);
+    --text-muted: var(--begonia-text-faint);
+
+    --accent: var(--begonia-cyan);
+    --accent-dim: rgba(87, 211, 242, 0.14);
+    --accent-hover: #7ee0f8;
+    --accent-glow: rgba(87, 211, 242, 0.38);
+
+    --purple: var(--begonia-violet);
+    --purple-dim: rgba(155, 108, 255, 0.14);
+    --purple-glow: rgba(155, 108, 255, 0.38);
+
+    --blue: var(--begonia-blue);
+    --blue-dim: rgba(76, 141, 255, 0.14);
+    --blue-glow: rgba(76, 141, 255, 0.38);
+
+    --green: var(--begonia-green);
+    --green-dim: rgba(98, 211, 148, 0.14);
+    --green-glow: rgba(98, 211, 148, 0.38);
+
+    --yellow: var(--begonia-yellow);
+    --yellow-dim: rgba(244, 189, 80, 0.14);
+    --yellow-glow: rgba(244, 189, 80, 0.38);
+
+    --red: var(--begonia-red);
+    --red-dim: rgba(255, 92, 108, 0.14);
+    --red-glow: rgba(255, 92, 108, 0.38);
+
+    --orange: var(--begonia-orange);
+    --orange-dim: rgba(255, 138, 61, 0.14);
+
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.45);
+    --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 12px 35px rgba(0, 0, 0, 0.55);
+    --shadow-glow: 0 0 20px var(--accent-glow);
+    --shadow-card: var(--begonia-shadow);
+
+    /* The upstream primary button/link colours read --lavender-*.
+       Point them at the Begonia blue → cyan gradient. */
+    --lavender-primary: var(--begonia-blue);
+    --lavender-glow: rgba(76, 141, 255, 0.32);
+    --lavender-glow-hover: rgba(76, 141, 255, 0.46);
+    --lavender-border: rgba(87, 211, 242, 0.3);
+    --lavender-border-hover: rgba(87, 211, 242, 0.52);
+
+    --grad-lavender: linear-gradient(135deg, #2b6fd0 0%, #3f9bea 50%, #57d3f2 100%);
+    --grad-lavender-hover: linear-gradient(135deg, #367ddc 0%, #4fa8f2 50%, #6cdcf7 100%);
+    --grad-lavender-active: linear-gradient(135deg, #245cb0 0%, #3487d2 50%, #47b8de 100%);
+    --grad-accent: var(--grad-lavender);
+    --grad-blue: linear-gradient(135deg, var(--begonia-blue), var(--begonia-cyan));
+    --grad-green: linear-gradient(135deg, var(--begonia-green), var(--begonia-cyan));
+    --grad-warm: linear-gradient(135deg, var(--begonia-yellow), var(--begonia-orange));
+    --grad-purple: linear-gradient(135deg, var(--begonia-violet), var(--begonia-cyan));
+    --grad-sidebar: linear-gradient(180deg, rgba(87, 211, 242, 0.05) 0%, transparent 100%);
+
+    --radius-sm: var(--begonia-radius-sm);
+    --radius-md: var(--begonia-radius-md);
+    --radius-lg: var(--begonia-radius-lg);
+    --radius-xl: 20px;
+    --radius-2xl: 26px;
+}
+
+/* Petrol-blue background mesh, slightly cooler than upstream. */
+body::before {
+    background:
+        radial-gradient(ellipse 80% 60% at 8% 8%, rgba(87, 211, 242, 0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 92% 82%, rgba(155, 108, 255, 0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 50% 50%, rgba(76, 141, 255, 0.05) 0%, transparent 70%),
+        linear-gradient(135deg, #06111f 0%, #081829 50%, #061019 100%);
+}
+
+/* ==================================================================
+   2. Brand block (sidebar) + topbar device line
+   ================================================================== */
+
+.brand-identity {
+    display: block;
+    margin-top: 2px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--begonia-violet);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.brand-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 0 14px 10px;
+}
+
+.brand-badge {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    padding: 2px 6px;
+    border-radius: 999px;
+    color: var(--begonia-cyan);
+    background: rgba(87, 211, 242, 0.08);
+    border: 1px solid rgba(87, 211, 242, 0.22);
+    white-space: nowrap;
+}
+
+.sidebar.collapsed .brand-badges {
+    display: none;
+}
+
+.topbar-device {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--begonia-text-muted);
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid var(--begonia-border);
+    background: rgba(13, 29, 49, 0.6);
+    white-space: nowrap;
+}
+
+.sidebar-credit {
+    font-size: 10px;
+    line-height: 1.4;
+    color: var(--begonia-text-faint);
+    margin-bottom: 6px;
+}
+
+.sidebar-credit a {
+    color: var(--begonia-text-muted);
+    text-decoration: none;
+    border-bottom: 1px dotted rgba(127, 157, 189, 0.5);
+}
+
+.sidebar-credit a:hover {
+    color: var(--begonia-cyan);
+}
+
+.sidebar-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sidebar.collapsed .sidebar-credit,
+.sidebar.collapsed .brand-identity {
+    display: none;
+}
+
+/* ==================================================================
+   3. Card treatment
+   ================================================================== */
+
+.dashboard-card,
+.card {
+    position: relative;
+}
+
+.dashboard-card {
+    overflow: hidden;
+    background: linear-gradient(145deg, rgba(16, 36, 60, 0.98), rgba(8, 24, 41, 0.98));
+    border: 1px solid var(--begonia-border);
+    border-radius: var(--begonia-radius-lg);
+    box-shadow: var(--begonia-shadow);
+    transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.dashboard-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle at top left, rgba(87, 211, 242, 0.08), transparent 38%);
+}
+
+.dashboard-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(87, 211, 242, 0.44);
+    box-shadow: 0 16px 42px rgba(0, 0, 0, 0.32), var(--begonia-glow);
+}
+
+/* ==================================================================
+   4. Begonia widgets
+   ================================================================== */
+
+.begonia-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 14px;
+}
+
+.begonia-grid > .span-12 { grid-column: span 12; }
+.begonia-grid > .span-8 { grid-column: span 8; }
+.begonia-grid > .span-6 { grid-column: span 6; }
+.begonia-grid > .span-4 { grid-column: span 4; }
+.begonia-grid > .span-3 { grid-column: span 3; }
+
+.begonia-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px 18px;
+}
+
+.begonia-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.begonia-panel-title {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--begonia-text-muted);
+}
+
+.begonia-hint {
+    font-size: 11px;
+    color: var(--begonia-text-faint);
+}
+
+/* --- Health verdict --- */
+
+.health-verdict {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.health-verdict-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+    background: var(--begonia-text-faint);
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.03);
+}
+
+.health-verdict.is-green .health-verdict-dot {
+    background: var(--begonia-green);
+    box-shadow: 0 0 12px rgba(98, 211, 148, 0.55);
+}
+
+.health-verdict.is-yellow .health-verdict-dot {
+    background: var(--begonia-yellow);
+    box-shadow: 0 0 12px rgba(244, 189, 80, 0.55);
+}
+
+.health-verdict.is-red .health-verdict-dot {
+    background: var(--begonia-red);
+    box-shadow: 0 0 12px rgba(255, 92, 108, 0.55);
+}
+
+.health-verdict-label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+}
+
+.health-verdict.is-green .health-verdict-label { color: var(--begonia-green); }
+.health-verdict.is-yellow .health-verdict-label { color: var(--begonia-yellow); }
+.health-verdict.is-red .health-verdict-label { color: var(--begonia-red); }
+
+.health-checks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.health-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid var(--begonia-border);
+    background: rgba(8, 24, 41, 0.7);
+    color: var(--begonia-text-muted);
+    white-space: nowrap;
+}
+
+.health-check .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--begonia-text-faint);
+    flex: 0 0 auto;
+}
+
+.health-check.level-ok .dot { background: var(--begonia-green); }
+.health-check.level-warn .dot { background: var(--begonia-yellow); }
+.health-check.level-bad .dot { background: var(--begonia-red); }
+.health-check.level-warn { border-color: rgba(244, 189, 80, 0.4); }
+.health-check.level-bad { border-color: rgba(255, 92, 108, 0.45); }
+.health-check.level-bad { color: var(--begonia-text); }
+
+/* --- Metric rows (zram, pressure, clusters) --- */
+
+.metric-list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.metric-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 13px;
+}
+
+.metric-row .metric-label {
+    color: var(--begonia-text-muted);
+    font-size: 12px;
+}
+
+.metric-row .metric-value {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 13px;
+    color: var(--begonia-text);
+}
+
+.metric-value.is-warn { color: var(--begonia-yellow); }
+.metric-value.is-bad { color: var(--begonia-red); }
+.metric-value.is-good { color: var(--begonia-green); }
+
+.metric-bar {
+    height: 5px;
+    border-radius: 999px;
+    background: rgba(29, 58, 88, 0.8);
+    overflow: hidden;
+}
+
+.metric-bar > span {
+    display: block;
+    height: 100%;
+    width: 0;
+    border-radius: 999px;
+    background: var(--grad-accent);
+    transition: width 300ms ease;
+}
+
+.metric-bar.is-warn > span { background: linear-gradient(135deg, var(--begonia-yellow), var(--begonia-orange)); }
+.metric-bar.is-bad > span { background: linear-gradient(135deg, var(--begonia-red), var(--begonia-orange)); }
+
+/* --- CPU clusters --- */
+
+.cluster-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: var(--begonia-radius-md);
+    border: 1px solid var(--begonia-border);
+    background: rgba(8, 24, 41, 0.65);
+}
+
+.cluster-row + .cluster-row { margin-top: 7px; }
+
+.cluster-badge {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    padding: 2px 7px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    flex: 0 0 auto;
+}
+
+.cluster-row.role-performance .cluster-badge {
+    color: var(--begonia-violet);
+    background: rgba(155, 108, 255, 0.12);
+    border: 1px solid rgba(155, 108, 255, 0.3);
+}
+
+.cluster-row.role-efficiency .cluster-badge {
+    color: var(--begonia-cyan);
+    background: rgba(87, 211, 242, 0.1);
+    border: 1px solid rgba(87, 211, 242, 0.28);
+}
+
+.cluster-row .cluster-cpus {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px;
+    color: var(--begonia-text-muted);
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cluster-row .cluster-freq {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px;
+    color: var(--begonia-text);
+    flex: 0 0 auto;
+}
+
+/* --- Vivi-AI services --- */
+
+.vivi-summary {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.vivi-count {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid var(--begonia-border);
+    color: var(--begonia-text-muted);
+}
+
+.vivi-count.is-good { color: var(--begonia-green); border-color: rgba(98, 211, 148, 0.35); }
+.vivi-count.is-bad { color: var(--begonia-red); border-color: rgba(255, 92, 108, 0.4); }
+
+.vivi-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 10px;
+    border-radius: var(--begonia-radius-md);
+    border: 1px solid var(--begonia-border);
+    background: rgba(8, 24, 41, 0.6);
+}
+
+.vivi-row + .vivi-row { margin-top: 6px; }
+
+.vivi-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--begonia-text-faint);
+    flex: 0 0 auto;
+}
+
+.vivi-row.sev-ok .vivi-dot { background: var(--begonia-green); }
+.vivi-row.sev-warn .vivi-dot { background: var(--begonia-yellow); }
+.vivi-row.sev-bad .vivi-dot { background: var(--begonia-red); }
+.vivi-row.sev-off .vivi-dot { background: var(--begonia-text-faint); }
+
+.vivi-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 13px;
+    color: var(--begonia-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.vivi-state {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--begonia-text-muted);
+    flex: 0 0 auto;
+}
+
+.vivi-mem {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px;
+    color: var(--begonia-text-faint);
+    flex: 0 0 auto;
+}
+
+/* ==================================================================
+   5. Responsive + motion
+   ================================================================== */
+
+@media (max-width: 1100px) {
+    .begonia-grid {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+
+    .begonia-grid > .span-8,
+    .begonia-grid > .span-6 { grid-column: span 6; }
+    .begonia-grid > .span-4,
+    .begonia-grid > .span-3 { grid-column: span 3; }
+}
+
+@media (max-width: 720px) {
+    .begonia-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .begonia-grid > .span-12,
+    .begonia-grid > .span-8,
+    .begonia-grid > .span-6,
+    .begonia-grid > .span-4,
+    .begonia-grid > .span-3 {
+        grid-column: 1 / -1;
+    }
+
+    .begonia-panel { padding: 14px; }
+
+    /* Touch targets: never below 44px on the panels that get tapped. */
+    .health-check,
+    .brand-badge,
+    .cluster-row,
+    .vivi-row { min-height: 32px; }
+
+    .topbar-device { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    .dashboard-card:hover { transform: none; }
+}
