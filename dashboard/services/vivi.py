@@ -19,6 +19,7 @@ from dashboard.dependencies import run_command
 
 
 _SHOW_PROPERTIES = (
+    "LoadState",
     "ActiveState",
     "SubState",
     "UnitFileState",
@@ -27,6 +28,11 @@ _SHOW_PROPERTIES = (
     "NRestarts",
     "ActiveEnterTimestamp",
 )
+
+# ``systemctl show`` exits 0 even for a unit that does not exist, reporting
+# LoadState=not-found. Only that load state counts as "not installed": a unit
+# that exists but is stopped is still a configured workload.
+_NOT_FOUND = {"not-found", "masked", ""}
 
 _STATE_SEVERITY = {
     "failed": "bad",
@@ -86,13 +92,14 @@ def get_vivi_services(services: Optional[List[Dict[str, str]]] = None) -> Dict[s
         label = spec.get("label", unit)
 
         props = _show_unit(unit, scope)
-        if props is None:
+        load_state = (props or {}).get("LoadState", "")
+        if props is None or load_state in _NOT_FOUND:
             entries.append({
                 "unit": unit,
                 "scope": scope,
                 "label": label,
                 "installed": False,
-                "state": "unknown",
+                "state": (props or {}).get("ActiveState") or "unknown",
                 "severity": "idle",
                 "memory_bytes": None,
                 "restarts": None,

@@ -236,6 +236,46 @@ def get_thermal_zones() -> list[dict]:
     return zones
 
 
+def _cpu_policy_map() -> dict[int, str]:
+    """Map a CPU number to the cpufreq policy directory that owns it.
+
+    On most devices every CPU has its own ``cpufreq`` directory. On Big.LITTLE
+    SoCs like the MT6785 only the policy directories exist
+    (``cpufreq/policy0`` …), so per-CPU reads fall back to the owning policy.
+    """
+    mapping: dict[int, str] = {}
+    root = "/sys/devices/system/cpu/cpufreq"
+    try:
+        entries = sorted(os.listdir(root))
+    except OSError:
+        return mapping
+
+    for name in entries:
+        if not name.startswith("policy"):
+            continue
+        policy_path = os.path.join(root, name)
+        for prop in ("affected_cpus", "related_cpus"):
+            try:
+                with open(os.path.join(policy_path, prop), "r") as handle:
+                    cpus = handle.read().split()
+            except OSError:
+                continue
+            if cpus:
+                for cpu in cpus:
+                    if cpu.isdigit():
+                        mapping.setdefault(int(cpu), policy_path)
+                break
+    return mapping
+
+
+def _read_int(path: str) -> int | None:
+    try:
+        with open(path, "r") as handle:
+            return int(handle.read().strip())
+    except (OSError, ValueError):
+        return None
+
+
 def get_cpu_frequencies() -> list[dict]:
     """
     Read CPU frequencies from /sys/devices/system/cpu/.
@@ -246,30 +286,39 @@ def get_cpu_frequencies() -> list[dict]:
     if not os.path.isdir(cpu_dir):
         return [{"note": "CPU frequency info not available"}]
 
+    policy_map = _cpu_policy_map()
+
     for entry in sorted(os.listdir(cpu_dir)):
-        if entry.startswith("cpu") and entry.isdigit():
-            cpu_num = int(entry[3:])
-            cpu_path = os.path.join(cpu_dir, entry)
-            cpu_info = {
-                "cpu": cpu_num,
-                "frequency_khz": None,
-                "frequency_mhz": None,
-                "governor": None,
-            }
+        # Upstream only tested the "cpu" prefix: entry.isdigit() is False for
+        # "cpu0", so the whole list came back empty on every machine.
+        if not entry.startswith("cpu") or not entry[3:].isdigit():
+            continue
 
-            # Read current frequency
-            freq_path = os.path.join(cpu_path, "cpufreq", "scaling_cur_freq")
-            if os.path.isfile(freq_path):
-                try:
-                    with open(freq_path, "r") as f:
-                        freq = int(f.read().strip())
-                        cpu_info["frequency_khz"] = freq
-                        cpu_info["frequency_mhz"] = round(freq / 1000, 1)
-                except Exception:
-                    pass
+        cpu_num = int(entry[3:])
+        cpu_path = os.path.join(cpu_dir, entry)
+        cpu_info = {
+            "cpu": cpu_num,
+            "frequency_khz": None,
+            "frequency_mhz": None,
+            "governor": None,
+        }
 
-            # Read governor
-            gov_path = os.path.join(cpu_path, "cpufreq", "scaling_governor")
+        # Prefer the per-CPU cpufreq directory; fall back to the policy that
+        # owns this CPU, which is all that Big.LITTLE kernels expose.
+        freq_dir = os.path.join(cpu_path, "cpufreq")
+        if not os.path.isdir(freq_dir):
+            freq_dir = policy_map.get(cpu_num, "")
+        if freq_dir:
+            # scaling_cur_freq is missing on the MT6785 policies; the hardware
+            # value reported by cpuinfo_cur_freq is the useful one there.
+            freq = _read_int(os.path.join(freq_dir, "scaling_cur_freq"))
+            if freq is None:
+                freq = _read_int(os.path.join(freq_dir, "cpuinfo_cur_freq"))
+            if freq is not None:
+                cpu_info["frequency_khz"] = freq
+                cpu_info["frequency_mhz"] = round(freq / 1000, 1)
+
+            gov_path = os.path.join(freq_dir, "scaling_governor")
             if os.path.isfile(gov_path):
                 try:
                     with open(gov_path, "r") as f:
@@ -277,7 +326,7 @@ def get_cpu_frequencies() -> list[dict]:
                 except Exception:
                     pass
 
-            cpu_freqs.append(cpu_info)
+        cpu_freqs.append(cpu_info)
 
     return cpu_freqs
 
