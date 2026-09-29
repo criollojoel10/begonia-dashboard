@@ -1,10 +1,22 @@
-![Lavender Banner](https://github.com/user-attachments/assets/d81858ff-fd52-4931-a35d-6a3e8664a655)
+# Begonia Dashboard
 
-# Lavender
+A lightweight, responsive FastAPI web dashboard for Linux system management and real-time device monitoring, optimized for the **Xiaomi Redmi Note 8 Pro** (`begonia`, MediaTek Helio G90T / MT6785) running Arch Linux ARM or Kupfer Linux.
 
-A lightweight, responsive FastAPI web dashboard for Linux system management and real-time device monitoring. Built with a sleek dark-theme UI, native Linux PAM authentication, Cockpit-style administrative elevation, and real-time Server-Sent Events (SSE) streaming.
+Begonia Dashboard monitors CPU, memory, zram, PSI pressure, battery, thermal zones, storage, networking, systemd services, packages and Vivi-AI workloads over Server-Sent Events. The hardware and OS detection stays generic: any other Linux host falls back to a `Generic Linux` profile instead of pretending to be a phone.
 
-Originally designed for postmarketOS on ARM64 mobile devices (such as the Redmi Note 7 `lavender`), it features dynamic hardware and OS detection that makes it equally well-suited for single-board computers (Raspberry Pi, Pine64), Linux phones, laptops, and home servers.
+## Origin
+
+Begonia Dashboard is a fork of [Lavender](https://github.com/minhazul73/lavender) by
+[minhazul73](https://github.com/minhazul73), distributed under the MIT License. The original
+license and copyright notice are preserved in this repository, and the upstream attribution is
+rendered in the sidebar of every page and on the sign-in screen.
+
+See [NOTICE.md](NOTICE.md) for the full derivation notice and the list of Begonia-specific
+additions.
+
+Upstream Lavender was originally designed for postmarketOS on ARM64 mobile devices (such as the
+Redmi Note 7 `lavender`), and its dynamic hardware and OS detection makes it equally well-suited
+for single-board computers (Raspberry Pi, Pine64), Linux phones, laptops, and home servers.
 
 ---
 
@@ -53,7 +65,7 @@ Originally designed for postmarketOS on ARM64 mobile devices (such as the Redmi 
 
 - **Backend:** FastAPI (async) + Uvicorn
 - **Frontend:** Vanilla JavaScript (ES6+, no frameworks) + Jinja2 templates
-- **Styling:** Custom responsive CSS, dark theme, Lavender theme palette (`--lavender-*`, `--grad-lavender`, glassmorphism, accent glow effects, micro-animations)
+- **Styling:** Custom responsive CSS, dark theme, petroleum-blue / cyan / violet Begonia palette (`--begonia-*`, applied as a token remap layer in `dashboard/static/begonia.css`), glassmorphism, accent glow effects, micro-animations
 - **Real-time:** Server-Sent Events (SSE) via FastAPI `StreamingResponse` and background `MetricCollector` ring buffers
 - **Package Management:** Multi-backend adapter architecture (`apk`, `apt`, `pacman`, `dnf`) with in-memory TTL caching
 - **Authentication:** Native Linux PAM (`python-pam`), shadow verification, `sudo -v` timestamp tickets, signed cookies (`itsdangerous`)
@@ -305,9 +317,61 @@ lavender/
 
 ## Limitations & Notes
 
-1. **Package Management:** Lavender features a distro-agnostic package adapter framework with support for Alpine / postmarketOS (`apk`), Debian / Ubuntu (`apt`), Arch Linux (`pacman`), and Fedora / RHEL (`dnf`). If an unsupported package manager is present, package management gracefully falls back to a disabled state.
+1. **Package Management:** Begonia Dashboard features a distro-agnostic package adapter framework with support for Alpine / postmarketOS (`apk`), Debian / Ubuntu (`apt`), Arch Linux (`pacman`), and Fedora / RHEL (`dnf`). If an unsupported package manager is present, package management gracefully falls back to a disabled state.
 2. **Kernel Sysfs Features:** Certain metrics (such as dynamic CPU frequency scaling or battery power draw) require kernel driver support in `/sys/devices/system/cpu/*/cpufreq` or `/sys/class/power_supply`. On virtual machines or devices without battery or cpufreq drivers, these cards gracefully indicate that the sensor data is unavailable.
 3. **Privileged Actions:** Modifying system services, killing processes, installing/upgrading packages, editing user groups/keys, adjusting CPU governors, and triggering power operations require administrative privileges (`wheel` or `sudo` membership) and sudo configured on the host. Root accounts (UID 0) are automatically granted permanent elevation.
+
+---
+
+## Begonia-specific additions
+
+Begonia Dashboard keeps the upstream collectors generic and adds a thin device layer on top.
+Nothing below is required for the dashboard to start on another machine: an unknown board is
+reported as `Generic Linux`.
+
+- **Platform profile** (`dashboard/platforms/`) — device tree, SoC and CPU cluster discovery driven
+  by `/proc/device-tree` and `/sys/devices/system/cpu/cpufreq/policy*`. On the Redmi Note 8 Pro the
+  kernel exposes `policy0` (6 LITTLE cores) and `policy6` (2 big cores); the big.LITTLE split is only
+  labelled when the kernel actually reports two different frequency ceilings.
+- **zram monitoring** (`dashboard/services/zram.py`) — compressed swap size, original vs. compressed
+  bytes, memory actually used and the compression ratio.
+- **PSI pressure** (`dashboard/services/pressure.py`) — `/proc/pressure/{cpu,memory,io}` `some` and
+  `full` stall averages, used as an early warning for memory and I/O pressure.
+- **Overall health verdict** (`dashboard/services/health.py`) — GREEN / YELLOW / RED combining failed
+  services, memory usage, zram swap saturation, PSI stalls, thermal readings, storage usage and
+  Vivi-AI service state.
+- **Vivi-AI overview** (`dashboard/services/vivi.py`) — status, memory, restart count and uptime for
+  the configured `openclaw-gateway`, `openclaw`, `opencode-web`, `tailscaled` and `sshd` units.
+- **Begonia visual identity** (`dashboard/static/begonia.css`, `dashboard/branding.py`) — a token
+  remap layer loaded after the upstream stylesheets. Removing the two `begonia.css` `<link>` tags and
+  the file restores the stock Lavender look; no upstream CSS file is modified.
+- **Read-only hardware audit** (`scripts/begonia-hardware-audit.sh`) — collects `/proc`, `/sys`,
+  `lsblk`, `findmnt`, `ip` and `systemctl` facts without changing the system. Its output is stored in
+  `audits/begonia-hardware-audit.txt`.
+
+Known hardware quirk: the MT6785 kernel used on `begonia` only exposes two thermal zones
+(`mtk-gauge` and `battery`). There is no CPU thermal zone, so the dashboard does not invent one.
+
+---
+
+## Deployment
+
+The intended deployment is a single hardened systemd unit on the device itself, bound to loopback
+and published to the tailnet with `tailscale serve`.
+
+```bash
+sudo mkdir -p /opt/begonia-dashboard && sudo chown "$USER":"$USER" /opt/begonia-dashboard
+rsync -a --delete --exclude='.git' --exclude='.venv' ~/begonia-dashboard/ /opt/begonia-dashboard/
+cd /opt/begonia-dashboard && python -m venv .venv && .venv/bin/pip install -r requirements.txt
+
+sudo install -Dm644 systemd/begonia-dashboard.service /etc/systemd/system/begonia-dashboard.service
+sudo systemctl daemon-reload && sudo systemctl enable --now begonia-dashboard.service
+
+sudo tailscale serve --bg http://127.0.0.1:8787
+```
+
+The unit listens on `127.0.0.1:8787`. Do not bind it to `0.0.0.0` and do not expose it to the
+public Internet: the dashboard performs privileged system administration.
 
 ---
 
@@ -325,5 +389,8 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## Credits
 
-Created with ❤️ for postmarketOS on Redmi Note 7 and Linux devices by [rahat](https://github.com/minhazul73).
+Begonia Dashboard is maintained by [criollojoel10](https://github.com/criollojoel10) as a fork of
+[Lavender](https://github.com/minhazul73/lavender), created with ❤️ for postmarketOS on Redmi Note 7
+and Linux devices by [rahat](https://github.com/minhazul73).
+
 Powered by FastAPI, Uvicorn, and vanilla JavaScript.
