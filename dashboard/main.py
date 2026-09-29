@@ -1,5 +1,9 @@
 """
-FastAPI application for Lavender.
+FastAPI application for Begonia Dashboard.
+
+Begonia Dashboard is a fork of Lavender by minhazul73 (MIT). The web UI is
+branded through :mod:`dashboard.branding`; upstream attribution is rendered in
+the sidebar and on the login page and must not be removed.
 """
 import os
 import asyncio
@@ -13,7 +17,8 @@ from fastapi.staticfiles import StaticFiles
 from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
 
-from dashboard.config import SESSION_COOKIE_NAME, APP_VERSION
+from dashboard import branding
+from dashboard.config import SESSION_COOKIE_NAME, APP_VERSION, HOST, PORT
 from dashboard.auth.session import UserSession, session_store
 from dashboard.auth.deps import get_current_session, require_session
 from dashboard.services.device_info import get_system_info
@@ -33,6 +38,43 @@ def _get_git_hash() -> str:
 
 
 _GIT_HASH = _get_git_hash()
+
+# Architecture badge label per detected machine type. Resolved at render time
+# so the UI never claims to be ARM when running on a laptop.
+_ARCH_BADGES = {
+    "aarch64": "ARCH ARM64",
+    "arm64": "ARCH ARM64",
+    "armv7l": "ARCH ARM32",
+    "armv6l": "ARCH ARM32",
+    "x86_64": "X86_64",
+    "amd64": "X86_64",
+    "i686": "X86",
+}
+
+
+def _brand_context() -> dict:
+    """Brand identity plus the resolved platform badge set."""
+    info = get_system_info()
+    arch = str(info.get("arch") or "").lower()
+    arch_badge = _ARCH_BADGES.get(arch, (arch or "linux").upper())
+
+    badges = ["LIVE", arch_badge]
+    badges.extend(branding.STATIC_BADGES[1:])  # SYSTEMD, TAILSCALE, VIVI-AI
+
+    return {
+        "app_name": branding.APP_NAME,
+        "app_short_name": branding.APP_SHORT_NAME,
+        "app_subtitle": branding.APP_SUBTITLE,
+        "app_identity": branding.APP_IDENTITY,
+        "brand_badges": badges,
+        "upstream_name": branding.UPSTREAM_NAME,
+        "upstream_author": branding.UPSTREAM_AUTHOR,
+        "upstream_url": branding.UPSTREAM_URL,
+        "project_url": branding.PROJECT_URL,
+        "derivation_notice": branding.DERIVATION_NOTICE,
+        "bind_host": HOST,
+        "bind_port": PORT,
+    }
 
 
 class Templates:
@@ -54,6 +96,8 @@ class Templates:
         context.setdefault("request", request)
         context.setdefault("app_version", APP_VERSION)
         context.setdefault("device_info", get_system_info())
+        for key, value in _brand_context().items():
+            context.setdefault(key, value)
         body = tmpl.render(**context, git_hash=_GIT_HASH)
         return HTMLResponse(content=body, status_code=200, media_type="text/html")
 
@@ -103,13 +147,14 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Lavender",
-    description="Web UI for Linux system management and device monitoring",
+    title=branding.APP_NAME,
+    description=branding.DESCRIPTION,
     version=APP_VERSION,
     lifespan=lifespan,
 )
 
-# Trust all hosts since we bind to 0.0.0.0
+# Trust all hosts: the default bind is loopback and the intended exposure is
+# Tailscale Serve, which forwards the MagicDNS Host header.
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
 
 # Attach rate limiter to app state
