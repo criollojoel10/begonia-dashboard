@@ -87,8 +87,8 @@ for single-board computers (Raspberry Pi, Pine64), Linux phones, laptops, and ho
 ### Installation
 
 ```bash
-git clone https://github.com/minhazul73/lavender.git
-cd lavender
+git clone https://github.com/criollojoel10/begonia-dashboard.git
+cd begonia-dashboard
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -98,24 +98,27 @@ pip install -r requirements.txt
 
 **Manual / Development:**
 ```bash
-python -m uvicorn dashboard.main:app --host 0.0.0.0 --port 8080 --reload
+python -m uvicorn dashboard.main:app --host 127.0.0.1 --port 8787 --reload
 ```
 
 **As a systemd service:**
-An example service file is provided in [`systemd/lavender.service`](systemd/lavender.service).
+A hardened system unit is provided in
+[`systemd/begonia-dashboard.service`](systemd/begonia-dashboard.service). It binds to loopback and
+is meant to be published to a private tailnet with `tailscale serve` — see
+[Deployment](#deployment) below.
 
-To install as a systemd user service:
 ```bash
-mkdir -p ~/.config/systemd/user/
-cp systemd/lavender.service ~/.config/systemd/user/
-# Edit WorkingDirectory and ExecStart paths in ~/.config/systemd/user/lavender.service to match your environment
-systemctl --user daemon-reload
-systemctl --user enable --now lavender
+sudo install -Dm644 systemd/begonia-dashboard.service /etc/systemd/system/begonia-dashboard.service
+# Edit User= and WorkingDirectory= to match your environment
+sudo systemctl daemon-reload
+sudo systemctl enable --now begonia-dashboard.service
 ```
 
 ### Access
 
-Open `http://<device-ip>:8080` in your web browser. 
+Open `http://127.0.0.1:8787` on the device itself, or the `tailscale serve` URL from any node in
+your tailnet. The default bind address is loopback on purpose: the dashboard performs privileged
+system administration.
 - The **Overview** page (`/`) is publicly viewable without authentication for quick device telemetry.
 - Protected pages and administrative actions require signing in with your Linux system credentials.
 
@@ -123,14 +126,14 @@ Open `http://<device-ip>:8080` in your web browser.
 
 ## Authentication & Security
 
-Lavender authenticates directly against your host Linux operating system:
+Begonia Dashboard authenticates directly against your host Linux operating system:
 
 1. **Native Verification:** When logging in via `/auth/login`, credentials are validated in sequence against:
    - Direct `/etc/shadow` verification (if accessible)
    - Linux PAM services (`PAM_SERVICE`, fallback to `base-auth`, `login`, etc.)
    - Sudo credential check (`sudo -S -p '' -v`)
    - Doas validation (`doas -C /etc/doas.conf true`)
-2. **Session Storage:** A cryptographically signed session cookie (`rn7_session`) is issued using `itsdangerous`. Sessions are stored in-memory with a sliding 60-minute idle expiration.
+2. **Session Storage:** A cryptographically signed session cookie (`begonia_session`) is issued using `itsdangerous`. Sessions are stored in-memory with a sliding 60-minute idle expiration.
 3. **Background Cleanup:** A background task runs every 5 minutes to purge expired idle sessions.
 4. **Cockpit-style Elevation:** Users in administrative groups (`wheel`, `sudo`, `root` or UID 0) can elevate their session by entering their password. This refreshes a local sudo timestamp ticket for 15 minutes. Root sessions (UID 0 / `root`) are automatically elevated permanently.
 5. **Elevation Revocation:** Non-root users can revoke elevation at any time via the top bar "Turn off" button, which calls `/auth/drop-admin` and runs `sudo -k` to drop the timestamp ticket.
@@ -145,10 +148,11 @@ Configuration values are located in [`dashboard/config.py`](dashboard/config.py)
 ### General Settings
 | Variable | Default | Description |
 | :--- | :--- | :--- |
-| `PORT` | `8080` | Web server port |
-| `HOST` | `"0.0.0.0"` | Bind network interface |
+| `PORT` | `8787` | Web server port (env `BEGONIA_PORT` / `DASHBOARD_PORT`) |
+| `HOST` | `"127.0.0.1"` | Bind network interface (env `BEGONIA_HOST` / `DASHBOARD_HOST`) |
 | `DEBUG` | `False` | Debug mode toggle |
-| `APP_VERSION` | `"0.4.0"` | Application version |
+| `APP_VERSION` | `"0.1.0"` | Application version |
+| `PLATFORM_PROFILE` | `"auto"` | Force a platform profile instead of device tree detection (`BEGONIA_PLATFORM`) |
 | `THERMAL_WARN_THRESHOLD` | `70000` | Thermal warning threshold in millidegrees C (70°C) |
 | `MEMORY_PRESSURE_THRESHOLD`| `0.85` | RAM fraction used to trigger memory pressure warning (85%) |
 | `LOG_LINES` | `50` | Default number of log lines to return |
@@ -158,10 +162,10 @@ Configuration values are located in [`dashboard/config.py`](dashboard/config.py)
 ### Auth & Session Settings
 | Variable | Default | Description |
 | :--- | :--- | :--- |
-| `SESSION_COOKIE_NAME` | `"rn7_session"` | Session cookie name |
-| `SESSION_MAX_IDLE_MINUTES` | `60` | Inactivity timeout before session expires |
-| `ADMIN_ELEVATION_TIMEOUT_MINUTES` | `15` | Administrative elevation duration |
-| `SESSION_SECRET_KEY` | *(env or default)* | Cookie signing key (set via `DASHBOARD_SECRET_KEY`) |
+| `SESSION_COOKIE_NAME` | `"begonia_session"` | Session cookie name |
+| `SESSION_MAX_IDLE_MINUTES` | `60` | Inactivity timeout before session expires (env `BEGONIA_SESSION_MAX_IDLE_MINUTES`) |
+| `ADMIN_ELEVATION_TIMEOUT_MINUTES` | `15` | Administrative elevation duration (env `BEGONIA_ELEVATION_TIMEOUT_MINUTES`) |
+| `SESSION_SECRET_KEY` | *(env or default)* | Cookie signing key (set via `BEGONIA_SECRET_KEY` or `DASHBOARD_SECRET_KEY`) |
 | `PAM_SERVICE` | `"login"` | Primary PAM service name (set via `PAM_SERVICE`) |
 | `LOGIN_RATE_LIMIT` | `"10/minute"` | Rate limit for login endpoint |
 
@@ -173,7 +177,11 @@ Configuration values are located in [`dashboard/config.py`](dashboard/config.py)
 | `SSE_THERMAL_INTERVAL_MS` | `5000` | Thermal zones collection interval (5s) |
 | `SSE_BATTERY_INTERVAL_MS` | `3000` | Battery metrics collection interval (3s) |
 | `SSE_NETWORK_INTERVAL_MS` | `2000` | Network rate collection interval (2s) |
-| `SSE_*_BUFFER` | `20`–`30` | Datapoints retained in ring buffers for sparklines |
+| `SSE_ZRAM_INTERVAL_MS` | `3000` | zram collection interval (3s) |
+| `SSE_PRESSURE_INTERVAL_MS` | `2000` | PSI stall collection interval (2s) |
+| `SSE_PLATFORM_INTERVAL_MS` | `15000` | Platform snapshot refresh interval (15s) |
+| `SSE_VIVI_INTERVAL_MS` | `5000` | Vivi-AI service status interval (5s) |
+| `SSE_*_BUFFER` | `10`–`30` | Datapoints retained in ring buffers for sparklines |
 
 ---
 
@@ -213,6 +221,11 @@ Configuration values are located in [`dashboard/config.py`](dashboard/config.py)
 - `POST /api/system/processes/kill?pid={n}` — Terminate process by PID *(admin required)*
 - `GET /api/system/memory` — Get human-readable and raw memory statistics
 - `GET /api/system/logs?lines={n}` — Fetch recent system journal entries
+- `GET /api/system/platform` — Detected SoC, CPU clusters and labelled thermal zones
+- `GET /api/system/health` — Aggregate GREEN / YELLOW / RED verdict with per-check detail
+- `GET /api/system/zram` — zram devices, compressed size and compression ratio
+- `GET /api/system/pressure` — PSI `some` / `full` stall averages for cpu, memory and io
+- `GET /api/system/vivi` — Status, memory and restart count of the configured Vivi-AI units
 
 ### Device, Hardware & Management (`/api/device/*`)
 
@@ -262,11 +275,15 @@ Configuration values are located in [`dashboard/config.py`](dashboard/config.py)
 ## Project Structure
 
 ```
-lavender/
+begonia-dashboard/
 ├── dashboard/
 │   ├── main.py                  # FastAPI application, lifespan, page routes, and middleware
 │   ├── config.py                # Configuration constants, intervals, thresholds, and limits
+│   ├── branding.py              # Product name, subtitle, and upstream attribution constants
 │   ├── dependencies.py          # Command runners, session execution, and system utility helpers
+│   ├── platforms/
+│   │   ├── base.py              # Generic device tree and CPU cluster discovery
+│   │   └── begonia.py           # Redmi Note 8 Pro (MT6785) platform profile
 │   ├── auth/
 │   │   ├── __init__.py          # Auth module init
 │   │   ├── bridge.py            # Linux PAM, shadow, and sudo/doas execution engine
@@ -280,6 +297,12 @@ lavender/
 │   ├── services/
 │   │   ├── device_info.py       # Dynamic hardware model, OS, and kernel discovery
 │   │   ├── live.py              # SSE MetricCollector base, RingBuffer, and collectors
+│   │   ├── begonia_live.py      # zram, PSI, platform and Vivi-AI collectors
+│   │   ├── health.py            # Aggregate GREEN / YELLOW / RED system verdict
+│   │   ├── zram.py              # Compressed swap size, bytes and compression ratio
+│   │   ├── pressure.py          # PSI stall metrics (/proc/pressure/*)
+│   │   ├── vivi.py              # Vivi-AI systemd workload status
+│   │   ├── platform_live.py     # Platform snapshot for templates and the API
 │   │   ├── systemd.py           # systemctl and journalctl wrappers
 │   │   ├── storage.py           # df -h parsing, mounts, and directory usage
 │   │   ├── processes.py         # ps aux and /proc resource inspection
@@ -301,14 +324,20 @@ lavender/
 │   │   ├── power.html           # System power actions, CPU power profiles, and scheduled timers
 │   │   └── battery.html         # Battery template (redirected to Overview)
 │   └── static/
-│       ├── style.css            # Base stylesheet (Lavender theme, components, typography)
+│       ├── style.css            # Base stylesheet (upstream components, typography, layout)
 │       ├── live.css             # Live metric card styling, battery bars, network widgets
+│       ├── begonia.css          # Begonia identity: token remap, panels, badges, responsive grid
 │       ├── script.js            # Frontend utilities, modal controllers, admin elevation toggles
-│       └── live.js              # EventSource SSE client, real-time DOM updater, sparklines
+│       ├── live.js              # EventSource SSE client, real-time DOM updater, sparklines
+│       └── begonia.js           # Health, zram, PSI, CPU cluster and Vivi-AI panel renderers
+├── scripts/
+│   └── begonia-hardware-audit.sh  # Read-only /proc, /sys, lsblk, ip and systemctl audit
+├── audits/                      # Captured upstream baseline and device audit output
 ├── systemd/
-│   └── lavender.service         # systemd user service unit template
+│   └── begonia-dashboard.service  # Hardened system unit (loopback, resource limits)
 ├── requirements.txt             # Python project dependencies
 ├── CONTRIBUTING.md              # Contribution guidelines
+├── NOTICE.md                    # Derivation notice and upstream attribution
 ├── LICENSE                      # MIT License
 └── README.md                    # Project documentation
 ```

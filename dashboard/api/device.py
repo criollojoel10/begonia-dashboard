@@ -509,7 +509,7 @@ async def api_schedule_power(
     except (ValueError, TypeError):
         raise HTTPException(status_code=400, detail="Minutes must be an integer between 1 and 1440")
 
-    message = payload.get("message", "Scheduled from Lavender dashboard")
+    message = payload.get("message", "Scheduled from Begonia Dashboard")
     res = await asyncio.to_thread(schedule_power_action, action, minutes, message)
     if not res.get("success"):
         raise HTTPException(status_code=500, detail=res.get("error", "Failed to schedule action"))

@@ -1,5 +1,5 @@
 """
-Shared dependencies and utility functions for the Lavender.
+Shared dependencies and utility functions for Begonia Dashboard.
 """
 import subprocess
 import shutil

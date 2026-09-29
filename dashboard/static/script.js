@@ -1,5 +1,5 @@
 /**
- * Lavender — Minimal JS helpers
+ * Begonia Dashboard — Minimal JS helpers
  * HTMX is loaded from CDN; this provides modal helpers and utilities
  */
 

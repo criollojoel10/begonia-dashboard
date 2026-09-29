@@ -1,5 +1,5 @@
 """
-User, session, and permission management service for Lavender.
+User, session, and permission management service for Begonia Dashboard.
 """
 import os
 import shutil
