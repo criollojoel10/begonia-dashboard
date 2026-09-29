@@ -1,0 +1,90 @@
+./CONTRIBUTING.md:1:# Contributing to Lavender
+./CONTRIBUTING.md:8:2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/lavender.git`
+./CONTRIBUTING.md:17:cd lavender
+./README.md:1:![Lavender Banner](https://github.com/user-attachments/assets/d81858ff-fd52-4931-a35d-6a3e8664a655)
+./README.md:3:# Lavender
+./README.md:7:Originally designed for postmarketOS on ARM64 mobile devices (such as the Redmi Note 7 `lavender`), it features dynamic hardware and OS detection that makes it equally well-suited for single-board computers (Raspberry Pi, Pine64), Linux phones, laptops, and home servers.
+./README.md:56:- **Styling:** Custom responsive CSS, dark theme, Lavender theme palette (`--lavender-*`, `--grad-lavender`, glassmorphism, accent glow effects, micro-animations)
+./README.md:78:git clone https://github.com/minhazul73/lavender.git
+./README.md:79:cd lavender
+./README.md:93:An example service file is provided in [`systemd/lavender.service`](systemd/lavender.service).
+./README.md:98:cp systemd/lavender.service ~/.config/systemd/user/
+./README.md:99:# Edit WorkingDirectory and ExecStart paths in ~/.config/systemd/user/lavender.service to match your environment
+./README.md:101:systemctl --user enable --now lavender
+./README.md:114:Lavender authenticates directly against your host Linux operating system:
+./README.md:253:lavender/
+./README.md:292:│       ├── style.css            # Base stylesheet (Lavender theme, components, typography)
+./README.md:297:│   └── lavender.service         # systemd user service unit template
+./README.md:308:1. **Package Management:** Lavender features a distro-agnostic package adapter framework with support for Alpine / postmarketOS (`apk`), Debian / Ubuntu (`apt`), Arch Linux (`pacman`), and Fedora / RHEL (`dnf`). If an unsupported package manager is present, package management gracefully falls back to a disabled state.
+./README.md:328:Created with ❤️ for postmarketOS on Redmi Note 7 and Linux devices by [rahat](https://github.com/minhazul73).
+./dashboard/api/device.py:512:    message = payload.get("message", "Scheduled from Lavender dashboard")
+./dashboard/auth/__init__.py:2:Authentication package for Lavender.
+./dashboard/dependencies.py:2:Shared dependencies and utility functions for the Lavender.
+./dashboard/main.py:2:FastAPI application for Lavender.
+./dashboard/main.py:106:    title="Lavender",
+./dashboard/services/device_info.py:2:System and device information detection service for Lavender.
+./dashboard/services/device_info.py:18:    1. Linux Device Tree (ARM mobile/smartphones like Redmi Note 7, SBCs):
+./dashboard/services/network.py:2:Network and WiFi management for Lavender dashboard.
+./dashboard/services/users.py:2:User, session, and permission management service for Lavender.
+./dashboard/static/script.js:2: * Lavender — Minimal JS helpers
+./dashboard/static/style.css:2: * Lavender — Premium Dark Theme
+./dashboard/static/style.css:74:    /* Lavender Theme Palette */
+./dashboard/static/style.css:75:    --lavender-50: #f5f3ff;
+./dashboard/static/style.css:76:    --lavender-100: #ede9fe;
+./dashboard/static/style.css:77:    --lavender-200: #ddd6fe;
+./dashboard/static/style.css:78:    --lavender-300: #c4b5fd;
+./dashboard/static/style.css:79:    --lavender-400: #a78bfa;
+./dashboard/static/style.css:80:    --lavender-500: #8b5cf6;
+./dashboard/static/style.css:81:    --lavender-600: #7c3aed;
+./dashboard/static/style.css:82:    --lavender-700: #6d28d9;
+./dashboard/static/style.css:83:    --lavender-primary: #7058df;
+./dashboard/static/style.css:84:    --lavender-glow: rgba(115, 96, 223, 0.32);
+./dashboard/static/style.css:85:    --lavender-glow-hover: rgba(115, 96, 223, 0.48);
+./dashboard/static/style.css:86:    --lavender-border: rgba(196, 181, 253, 0.28);
+./dashboard/static/style.css:87:    --lavender-border-hover: rgba(196, 181, 253, 0.5);
+./dashboard/static/style.css:90:    --grad-lavender: linear-gradient(135deg, #6653d4 0%, #7e69e5 50%, #917de9 100%);
+./dashboard/static/style.css:91:    --grad-lavender-hover: linear-gradient(135deg, #715ee0 0%, #8974ee 50%, #9b88f2 100%);
+./dashboard/static/style.css:92:    --grad-lavender-active: linear-gradient(135deg, #5b46cc 0%, #735edc 50%, #8671e1 100%);
+./dashboard/static/style.css:93:    --grad-accent: var(--grad-lavender);
+./dashboard/static/style.css:677:    background: var(--grad-lavender);
+./dashboard/static/style.css:678:    border: 1px solid var(--lavender-border);
+./dashboard/static/style.css:681:    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 3px 12px var(--lavender-glow);
+./dashboard/static/style.css:686:    background: var(--grad-lavender-hover);
+./dashboard/static/style.css:687:    border-color: var(--lavender-border-hover);
+./dashboard/static/style.css:688:    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 5px 18px var(--lavender-glow-hover);
+./dashboard/static/style.css:694:    background: var(--grad-lavender-active);
+./dashboard/static/style.css:695:    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2), 0 2px 6px var(--lavender-glow);
+./dashboard/static/style.css:701:    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 3px 12px var(--lavender-glow);
+./dashboard/static/style.css:718:    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 2px 8px var(--lavender-glow);
+./dashboard/static/style.css:722:    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 4px 14px var(--lavender-glow-hover);
+./dashboard/static/style.css:4288:    color: var(--lavender-300);
+./dashboard/static/style.css:4937:    color: var(--lavender-300);
+./dashboard/templates/base.html:6:    <title>{% block title %}Lavender{% endblock %}</title>
+./dashboard/templates/base.html:27:                <h1>Lavender</h1>
+./dashboard/templates/base.html:95:            <span class="version" title="Lavender v{{ app_version }}">v{{ app_version }}</span>
+./dashboard/templates/battery.html:3:{% block title %}Battery — Lavender{% endblock %}
+./dashboard/templates/index.html:3:{% block title %}Overview — Lavender{% endblock %}
+./dashboard/templates/login.html:6:    <title>Sign In — Lavender</title>
+./dashboard/templates/login.html:7:    <meta name="description" content="Sign in to Lavender with system credentials">
+./dashboard/templates/login.html:134:            border: 1px solid var(--lavender-border, rgba(196, 181, 253, 0.28));
+./dashboard/templates/login.html:136:            background: var(--grad-lavender, linear-gradient(135deg, #6653d4 0%, #7e69e5 50%, #917de9 100%));
+./dashboard/templates/login.html:144:            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 4px 14px var(--lavender-glow, rgba(115, 96, 223, 0.35));
+./dashboard/templates/login.html:150:            background: var(--grad-lavender-hover, linear-gradient(135deg, #715ee0 0%, #8974ee 50%, #9b88f2 100%));
+./dashboard/templates/login.html:151:            border-color: var(--lavender-border-hover, rgba(196, 181, 253, 0.5));
+./dashboard/templates/login.html:152:            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 6px 20px var(--lavender-glow-hover, rgba(115, 96, 223, 0.5));
+./dashboard/templates/login.html:157:            background: var(--grad-lavender-active, linear-gradient(135deg, #5b46cc 0%, #735edc 50%, #8671e1 100%));
+./dashboard/templates/login.html:159:            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2), 0 2px 6px var(--lavender-glow, rgba(115, 96, 223, 0.25));
+./dashboard/templates/login.html:193:            <h1 class="login-title">Lavender</h1>
+./dashboard/templates/network.html:3:{% block title %}Network — Lavender{% endblock %}
+./dashboard/templates/packages.html:3:{% block title %}Packages & Updates — Lavender{% endblock %}
+./dashboard/templates/power.html:3:{% block title %}Power Management — Lavender{% endblock %}
+./dashboard/templates/power.html:282:                Lavender will reconnect automatically as soon as the kernel finishes booting.
+./dashboard/templates/power.html:295:                    Waiting for device to come back online. Lavender is polling the server...
+./dashboard/templates/power.html:645:                            showResultModal('Shutdown Initiated', 'Device is powering off completely. Lavender will become unreachable.', true);
+./dashboard/templates/power.html:691:                if (statusSub) statusSub.textContent = 'Attempt ' + attempts + ' of ' + maxAttempts + ' — pinging Lavender...';
+./dashboard/templates/processes.html:3:{% block title %}Processes — Lavender{% endblock %}
+./dashboard/templates/services.html:3:{% block title %}Services — Lavender{% endblock %}
+./dashboard/templates/services.html:9:        <input type="search" id="service-search" name="service_search" class="input" placeholder="Search services (e.g. ssh, lavender)..." style="min-width: 240px;" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
+./dashboard/templates/storage.html:3:{% block title %}Storage — Lavender{% endblock %}
+./dashboard/templates/users.html:3:{% block title %}Users & Permissions — Lavender{% endblock %}
+./systemd/lavender.service:2:Description=Lavender (Web UI)
