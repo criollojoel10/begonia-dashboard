@@ -1122,14 +1122,29 @@ class LiveMonitor:
     """
 
     __slots__ = ("_cpu", "_ram", "_thermal", "_battery", "_network",
+                 "_zram", "_pressure", "_platform", "_vivi",
                  "_lock", "_client_count", "_started")
 
     def __init__(self) -> None:
+        # Imported lazily: dashboard.services.begonia_live imports
+        # MetricCollector from this module, so a top-level import would be
+        # circular.
+        from dashboard.services.begonia_live import (
+            PlatformCollector,
+            PressureCollector,
+            ViviCollector,
+            ZramCollector,
+        )
+
         self._cpu = CPUFreqCollector()
         self._ram = RAMCollector()
         self._thermal = ThermalCollector()
         self._battery = BatteryCollector()
         self._network = NetworkRateCollector()
+        self._zram = ZramCollector()
+        self._pressure = PressureCollector()
+        self._platform = PlatformCollector()
+        self._vivi = ViviCollector()
         self._lock = asyncio.Lock()
         self._client_count = 0
         self._started = False
@@ -1154,27 +1169,43 @@ class LiveMonitor:
     def network(self) -> NetworkRateCollector:
         return self._network
 
+    @property
+    def zram(self):
+        return self._zram
+
+    @property
+    def pressure(self):
+        return self._pressure
+
+    @property
+    def platform(self):
+        return self._platform
+
+    @property
+    def vivi(self):
+        return self._vivi
+
     async def _ensure_started(self) -> None:
         """Start all collectors. Caller must hold ``_lock``."""
         if self._started:
             return
         loop = asyncio.get_running_loop()
-        self._cpu.start(loop)
-        self._ram.start(loop)
-        self._thermal.start(loop)
-        self._battery.start(loop)
-        self._network.start(loop)
+        for collector in (
+            self._cpu, self._ram, self._thermal, self._battery, self._network,
+            self._zram, self._pressure, self._platform, self._vivi,
+        ):
+            collector.start(loop)
         self._started = True
 
     async def _ensure_stopped(self) -> None:
         """Stop all collectors. Caller must hold ``_lock``."""
         if not self._started:
             return
-        self._cpu.stop()
-        self._ram.stop()
-        self._thermal.stop()
-        self._battery.stop()
-        self._network.stop()
+        for collector in (
+            self._cpu, self._ram, self._thermal, self._battery, self._network,
+            self._zram, self._pressure, self._platform, self._vivi,
+        ):
+            collector.stop()
         self._started = False
 
     async def add_client(self) -> None:
@@ -1209,6 +1240,18 @@ class LiveMonitor:
     async def get_network(self) -> dict:
         return await self._network.collect()
 
+    async def get_zram(self) -> dict:
+        return await self._zram.collect()
+
+    async def get_pressure(self) -> dict:
+        return await self._pressure.collect()
+
+    async def get_platform(self) -> dict:
+        return await self._platform.collect()
+
+    async def get_vivi(self) -> dict:
+        return await self._vivi.collect()
+
     async def get_all_metrics(self) -> dict:
         return {
             "cpu": await self.get_cpu(),
@@ -1216,6 +1259,10 @@ class LiveMonitor:
             "thermal": await self.get_thermal(),
             "battery": await self.get_battery(),
             "network": await self.get_network(),
+            "zram": await self.get_zram(),
+            "pressure": await self.get_pressure(),
+            "platform": await self.get_platform(),
+            "vivi": await self.get_vivi(),
         }
 
 

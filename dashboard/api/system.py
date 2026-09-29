@@ -31,8 +31,49 @@ from dashboard.services.processes import (
     get_memory_human,
 )
 from dashboard.services.storage import get_disk_usage
+from dashboard.services.health import compute_health
+from dashboard.services.platform_live import get_platform_snapshot
+from dashboard.services.vivi import get_vivi_services
+from dashboard.services.zram import get_zram
+from dashboard.services.pressure import get_pressure
 
 router = APIRouter()
+
+
+# ---- Begonia platform / health ----
+
+@router.get("/system/platform")
+async def api_platform(session: Optional[UserSession] = Depends(get_current_session)):
+    """Detected hardware platform: SoC, CPU clusters and thermal zone labels.
+
+    Falls back to a generic Linux profile when the device tree does not match
+    a known board, so this endpoint is safe on any machine.
+    """
+    return get_platform_snapshot()
+
+
+@router.get("/system/health")
+async def api_health(session: Optional[UserSession] = Depends(get_current_session)):
+    """Overall GREEN / YELLOW / RED verdict with an itemised check list."""
+    return compute_health()
+
+
+@router.get("/system/zram")
+async def api_zram(session: Optional[UserSession] = Depends(get_current_session)):
+    """zram compressed-swap metrics, including the compression ratio."""
+    return get_zram()
+
+
+@router.get("/system/pressure")
+async def api_pressure(session: Optional[UserSession] = Depends(get_current_session)):
+    """PSI (Pressure Stall Information) for cpu, memory and io."""
+    return get_pressure()
+
+
+@router.get("/system/vivi")
+async def api_vivi(session: Optional[UserSession] = Depends(get_current_session)):
+    """Status of the configured Vivi-AI workloads (systemd units)."""
+    return get_vivi_services()
 
 
 # ---- Systemd Services ----
