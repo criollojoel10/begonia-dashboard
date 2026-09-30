@@ -125,6 +125,17 @@ HEALTH_THERMAL_CRIT_C = _env_float("BEGONIA_THERMAL_CRIT_C", default=80.0)
 HEALTH_ZRAM_WARN_RATIO = _env_float("BEGONIA_ZRAM_WARN_RATIO", default=0.9)
 HEALTH_PSI_WARN = _env_float("BEGONIA_PSI_WARN", default=10.0)
 
+# ===== OpenClaw scratch directory =====
+# OpenClaw copies its plugin sources under <stateDir>/tmp/plugin-captures while
+# a capture is alive. A gateway run legitimately holds a few GB there, so the
+# health check only warns when the tree grows past the budget below or when
+# several instances pile up (a sign that a dirty shutdown left scratch behind).
+OPENCLAW_SCRATCH_DIR = _env("BEGONIA_OPENCLAW_SCRATCH", default="~/.openclaw/tmp/plugin-captures")
+OPENCLAW_SCRATCH_WARN_BYTES = _env_int(
+    "BEGONIA_OPENCLAW_SCRATCH_WARN_BYTES", default=6 * 1024 * 1024 * 1024
+)
+OPENCLAW_SCRATCH_INSTANCE_WARN = _env_int("BEGONIA_OPENCLAW_SCRATCH_INSTANCES", default=2)
+
 # ===== Vivi-AI workloads surfaced in the dashboard =====
 # Missing units are reported as "not installed" instead of failing the panel.
 VIVI_SERVICES = [

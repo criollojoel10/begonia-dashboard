@@ -23,6 +23,7 @@ from dashboard.config import (
     THERMAL_WARN_THRESHOLD,
 )
 from dashboard.platforms import detect_platform, list_thermal_zones
+from dashboard.services.openclaw_scratch import format_scratch, get_openclaw_scratch
 from dashboard.services.pressure import get_pressure
 from dashboard.services.storage import get_disk_usage
 from dashboard.services.vivi import get_vivi_services
@@ -222,6 +223,18 @@ def compute_health() -> Dict[str, object]:
             f"{vivi['active_count']}/{vivi['installed_count']} active", vivi)
     else:
         add("vivi", "Vivi-AI", "ok", f"{vivi['active_count']} active", vivi)
+
+    # OpenClaw plugin-capture scratch. Never "bad": a large tree is normal while
+    # the gateway is working, so this only ever degrades the verdict to YELLOW.
+    scratch = get_openclaw_scratch()
+    if not scratch.get("available"):
+        add("openclaw_scratch", "OpenClaw scratch", "unknown", "not present", scratch)
+    else:
+        detail = format_scratch(scratch)
+        if scratch.get("truncated"):
+            detail += " (measurement capped)"
+        add("openclaw_scratch", "OpenClaw scratch",
+            str(scratch.get("level") or "ok"), detail, scratch)
 
     worst_rank = max(_LEVEL_RANK.get(str(check["level"]), 0) for check in checks) if checks else 0
     status = {0: "green", 1: "yellow", 2: "red"}[worst_rank]

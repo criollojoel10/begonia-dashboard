@@ -155,6 +155,13 @@ Configuration values are located in [`dashboard/config.py`](dashboard/config.py)
 | `PLATFORM_PROFILE` | `"auto"` | Force a platform profile instead of device tree detection (`BEGONIA_PLATFORM`) |
 | `THERMAL_WARN_THRESHOLD` | `70000` | Thermal warning threshold in millidegrees C (70°C) |
 | `MEMORY_PRESSURE_THRESHOLD`| `0.85` | RAM fraction used to trigger memory pressure warning (85%) |
+| `HEALTH_THERMAL_WARN_C` | `70.0` | Health verdict thermal warning (°C, `BEGONIA_THERMAL_WARN_C`) |
+| `HEALTH_THERMAL_CRIT_C` | `80.0` | Health verdict thermal failure (°C, `BEGONIA_THERMAL_CRIT_C`) |
+| `HEALTH_ZRAM_WARN_RATIO` | `0.9` | zram swap saturation that degrades the verdict (`BEGONIA_ZRAM_WARN_RATIO`) |
+| `HEALTH_PSI_WARN` | `10.0` | PSI stall percentage that degrades the verdict (`BEGONIA_PSI_WARN`) |
+| `OPENCLAW_SCRATCH_DIR` | `"~/.openclaw/tmp/plugin-captures"` | Scratch tree watched by the health check (`BEGONIA_OPENCLAW_SCRATCH`) |
+| `OPENCLAW_SCRATCH_WARN_BYTES` | `6442450944` | Scratch size that degrades the verdict, 6 GiB (`BEGONIA_OPENCLAW_SCRATCH_WARN_BYTES`) |
+| `OPENCLAW_SCRATCH_INSTANCE_WARN` | `2` | Instance directories that count as stale scratch (`BEGONIA_OPENCLAW_SCRATCH_INSTANCES`) |
 | `LOG_LINES` | `50` | Default number of log lines to return |
 | `TOP_PROCESSES` | `20` | Default process limit |
 | `TOP_DIRS` | `10` | Top directories limit for disk usage |
@@ -302,6 +309,7 @@ begonia-dashboard/
 │   │   ├── zram.py              # Compressed swap size, bytes and compression ratio
 │   │   ├── pressure.py          # PSI stall metrics (/proc/pressure/*)
 │   │   ├── vivi.py              # Vivi-AI systemd workload status
+│   │   ├── openclaw_scratch.py  # OpenClaw plugin-capture scratch size and hygiene
 │   │   ├── platform_live.py     # Platform snapshot for templates and the API
 │   │   ├── systemd.py           # systemctl and journalctl wrappers
 │   │   ├── storage.py           # df -h parsing, mounts, and directory usage
@@ -367,10 +375,14 @@ reported as `Generic Linux`.
 - **PSI pressure** (`dashboard/services/pressure.py`) — `/proc/pressure/{cpu,memory,io}` `some` and
   `full` stall averages, used as an early warning for memory and I/O pressure.
 - **Overall health verdict** (`dashboard/services/health.py`) — GREEN / YELLOW / RED combining failed
-  services, memory usage, zram swap saturation, PSI stalls, thermal readings, storage usage and
-  Vivi-AI service state.
+  services, memory usage, zram swap saturation, PSI stalls, thermal readings, storage usage,
+  Vivi-AI service state and OpenClaw scratch size.
 - **Vivi-AI overview** (`dashboard/services/vivi.py`) — status, memory, restart count and uptime for
   the configured `openclaw-gateway`, `openclaw`, `opencode-web`, `tailscaled` and `sshd` units.
+- **OpenClaw scratch watchdog** (`dashboard/services/openclaw_scratch.py`) — measures
+  `~/.openclaw/tmp/plugin-captures` and warns when it exceeds the configured budget or when stale
+  instance directories pile up. OpenClaw copies its whole plugin tree per run, so a coarse size
+  signal catches scratch left by a dirty shutdown without ever failing the verdict.
 - **Begonia visual identity** (`dashboard/static/begonia.css`, `dashboard/branding.py`) — a token
   remap layer loaded after the upstream stylesheets. Removing the two `begonia.css` `<link>` tags and
   the file restores the stock Lavender look; no upstream CSS file is modified.
