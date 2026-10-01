@@ -97,6 +97,16 @@
                 </span>
                 <span class="nav-text">Power</span>
             </a>
+            {% if vivi_fitness_url %}
+            <a href="{{ vivi_fitness_url|e }}" id="nav-vivi-fitness" class="nav-item" target="_blank" rel="noopener noreferrer">
+                <span class="nav-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M3 12h4l3-8 4 16 3-8h4"/>
+                    </svg>
+                </span>
+                <span class="nav-text">Vivi Fitness ↗</span>
+            </a>
+            {% endif %}
         </nav>
 
         <div class="sidebar-footer">

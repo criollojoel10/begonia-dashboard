@@ -10,6 +10,7 @@ Every value can be overridden from the environment so the same tree can run
 unmodified on non-Begonia machines.
 """
 import os
+from urllib.parse import urlsplit
 
 from dashboard.branding import APP_NAME  # noqa: F401  (re-exported for callers)
 
@@ -56,6 +57,22 @@ def _env_flag(*names: str, default: bool = False) -> bool:
 HOST = _env("BEGONIA_HOST", "DASHBOARD_HOST", default="127.0.0.1")
 PORT = _env_int("BEGONIA_PORT", "DASHBOARD_PORT", default=8787)
 DEBUG = _env_flag("BEGONIA_DEBUG", "DASHBOARD_DEBUG", default=False)
+
+# Optional link to the separate personal fitness service. Reject non-HTTPS URLs
+# and embedded credentials before passing this value to the template.
+VIVI_FITNESS_URL = _env("VIVI_FITNESS_URL").strip()
+if VIVI_FITNESS_URL:
+    try:
+        _vivi_url = urlsplit(VIVI_FITNESS_URL)
+        if (
+            _vivi_url.scheme.lower() != "https"
+            or not _vivi_url.netloc
+            or _vivi_url.username is not None
+            or _vivi_url.password is not None
+        ):
+            VIVI_FITNESS_URL = ""
+    except ValueError:
+        VIVI_FITNESS_URL = ""
 
 # Application version (SemVer: < 1.0 indicates development / pre-release status)
 APP_VERSION = "0.1.0"

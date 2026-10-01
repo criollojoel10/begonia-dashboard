@@ -50,6 +50,7 @@ for single-board computers (Raspberry Pi, Pine64), Linux phones, laptops, and ho
   - **CPU Power Profiles:** Live governor detection and one-click switching across all CPU cores (`powersave`, `schedutil` / `ondemand`, `performance`).
   - **Scheduled Power Actions:** Quick-timer presets (5m, 15m, 30m, 60m), custom countdown timers with broadcast wall messages (`shutdown -r +N`, `shutdown -h +N`), live pending schedule status banner, and one-click cancellation (`shutdown -c`).
 - **Systemd Service Management** — Manage system and user services (`systemctl` and `systemctl --user`). Filter by scope (`user`, `system`, `all`) and state (`active`, `inactive`, `failed`), navigate with pagination, inspect unit status, view real-time journalctl logs in an embedded dark terminal window with copyable commands, and execute lifecycle actions (`start`, `stop`, `restart`, `enable`, `disable`).
+- **Vivi Fitness link (optional)** — Opens the separate, tailnet-only Mi Fitness training dashboard in a new tab. It does not merge sports data into this system-administration app; configure `VIVI_FITNESS_URL` only after the independent service is deployed.
 - **Storage & Mounts** — Disk usage overview with visual usage bars, automatic filtering of pseudo/virtual filesystems (`tmpfs`, `devpts`), and external storage detection (`/mnt`, `/media`, `/sdcard`).
 - **Process Management** — Interactive process monitor with sorting by CPU, memory, PID, user, or name, supporting both standard `procps` and `busybox ps`. Terminate processes with admin privileges (`kill -9`).
 - **Network & Diagnostics** — 
@@ -162,6 +163,7 @@ Configuration values are located in [`dashboard/config.py`](dashboard/config.py)
 | `OPENCLAW_SCRATCH_DIR` | `"~/.openclaw/tmp/plugin-captures"` | Scratch tree watched by the health check (`BEGONIA_OPENCLAW_SCRATCH`) |
 | `OPENCLAW_SCRATCH_WARN_BYTES` | `6442450944` | Scratch size that degrades the verdict, 6 GiB (`BEGONIA_OPENCLAW_SCRATCH_WARN_BYTES`) |
 | `OPENCLAW_SCRATCH_INSTANCE_WARN` | `2` | Instance directories that count as stale scratch (`BEGONIA_OPENCLAW_SCRATCH_INSTANCES`) |
+| `VIVI_FITNESS_URL` | *(empty)* | Optional HTTPS link to the separate Vivi Fitness dashboard; invalid/non-HTTPS URLs are ignored |
 | `LOG_LINES` | `50` | Default number of log lines to return |
 | `TOP_PROCESSES` | `20` | Default process limit |
 | `TOP_DIRS` | `10` | Top directories limit for disk usage |
@@ -413,6 +415,12 @@ sudo tailscale serve --bg http://127.0.0.1:8787
 
 The unit listens on `127.0.0.1:8787`. Do not bind it to `0.0.0.0` and do not expose it to the
 public Internet: the dashboard performs privileged system administration.
+
+Vivi Fitness runs as a separate service on loopback `:8788`, published privately on Tailscale
+HTTPS `:10000`; the Begonia Dashboard root (`:443`) and OpenCode (`:8443`) remain unchanged. After
+Vivi Fitness is verified, set `VIVI_FITNESS_URL=https://begonia.taile971a.ts.net:10000/` in the
+Begonia Dashboard environment and restart only that service to show its optional sidebar link.
+Never enable Tailscale Funnel for either dashboard.
 
 ---
 

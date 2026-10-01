@@ -18,7 +18,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
 
 from dashboard import branding
-from dashboard.config import SESSION_COOKIE_NAME, APP_VERSION, HOST, PORT
+from dashboard.config import SESSION_COOKIE_NAME, APP_VERSION, HOST, PORT, VIVI_FITNESS_URL
 from dashboard.auth.session import UserSession, session_store
 from dashboard.auth.deps import get_current_session, require_session
 from dashboard.services.device_info import get_system_info
@@ -74,6 +74,7 @@ def _brand_context() -> dict:
         "derivation_notice": branding.DERIVATION_NOTICE,
         "bind_host": HOST,
         "bind_port": PORT,
+        "vivi_fitness_url": VIVI_FITNESS_URL,
     }
 
 
@@ -256,4 +257,3 @@ for _path, (_template, _summary) in PAGES.items():
 @app.get("/battery", response_class=RedirectResponse, summary="Redirect to live overview")
 async def page_battery_redirect() -> RedirectResponse:
     return RedirectResponse(url="/", status_code=307)
-
