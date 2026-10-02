@@ -253,7 +253,7 @@ Configuration values are located in [`dashboard/config.py`](dashboard/config.py)
 - `POST /auth/login` — Authenticate user credentials (supports Form and JSON payloads; sets signed cookie)
 - `GET, POST /auth/logout` — Terminate session, drop sudo ticket, and clear cookie
 - `GET /auth/me` — Get current active session details and privilege status
-- `POST /auth/elevate` — Elevate to administrative privileges (payload: `{"password": "..."}`)
+- `POST /auth/elevate` — Elevate to administrative privileges (payload: `{"password": "..."}`; `password` is required only when the auth gate is on — with the gate off it auto-elevates and accepts an empty body)
 - `POST /auth/drop-admin` — Drop active elevation and revoke sudo timestamp ticket
 
 ### System (`/api/system/*`)

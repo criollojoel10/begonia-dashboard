@@ -37,7 +37,11 @@ class LoginRequest(BaseModel):
 
 
 class ElevateRequest(BaseModel):
-    password: str
+    # Optional because the endpoint's contract differs by gate state: with
+    # AUTH_ENABLED on it is required (it is the sudo password), and with the gate
+    # off there is nothing to verify, so `password: str` answered 422 to callers
+    # that correctly sent `{}`.
+    password: Optional[str] = None
 
 
 @router.post("/login")
@@ -135,7 +139,13 @@ async def api_login(
     return res
 
 
-@router.api_route("/logout", methods=["GET", "POST"])
+# Registered as two single-method routes instead of one
+# `api_route(..., methods=["GET", "POST"])`: FastAPI derives the operation_id from
+# the route name and path only, so a multi-method route makes GET and POST collide
+# on `api_logout_auth_logout_get` and every openapi.json request logs a
+# "Duplicate Operation ID" UserWarning. Explicit ids keep the schema unique.
+@router.get("/logout", operation_id="api_logout_get")
+@router.post("/logout", operation_id="api_logout_post")
 async def api_logout(
     request: Request,
     session: Optional[UserSession] = Depends(get_current_session),
