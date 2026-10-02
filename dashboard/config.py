@@ -197,6 +197,14 @@ VIVI_SERVICES = [
     {"unit": "display-off.service", "scope": "system", "label": "Backlight Off (headless)"},
     {"unit": "mediatek-wifi.service", "scope": "system", "label": "Wi-Fi (mediatek)"},
     {"unit": "haveged.service", "scope": "system", "label": "Entropy (haveged, legacy)", "optional": True},
+    # On-demand daemons: D-Bus activated, so `systemctl is-enabled` says disabled
+    # while the process is really running (wpa_supplicant behind
+    # fi.w1.wpa_supplicant1 from NetworkManager, iio-sensor-proxy behind
+    # net.hadess.SensorProxy). Listed because a running daemon the summary
+    # cannot name is exactly what made this panel look incomplete before;
+    # optional because they only exist while their consumer asks for them.
+    {"unit": "wpa_supplicant.service", "scope": "system", "label": "Wi-Fi Daemon", "optional": True},
+    {"unit": "iio-sensor-proxy.service", "scope": "system", "label": "IIO Sensor Proxy", "optional": True},
 ]
 
 # ===== Auth & Session Settings =====
