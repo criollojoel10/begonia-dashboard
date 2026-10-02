@@ -430,8 +430,10 @@ reported as `Generic Linux`.
   activated daemons that actually run, so nothing enabled is invisible in the summary. Excluded on
   purpose (nothing to act on): `getty@.service`, boot oneshots (`systemd-tmpfiles-*`, `fstrim`,
   `paccache`), activation sockets (`pipewire*`, `systemd-resolved-{monitor,varlink}.socket`,
-  `systemd-userdbd.socket`, `p11-kit-server.socket`) and desktop session units (`wireplumber`,
-  `xdg-user-dirs`); the full inventory of ~129 units stays on the `/services` page.
+  `systemd-userdbd.socket`, `p11-kit-server.socket`), desktop session units (`wireplumber`,
+  `xdg-user-dirs`) and core system plumbing (`systemd-journald`, `systemd-logind`,
+  `systemd-udevd`, `user@*.service`); the full inventory of ~129 units stays on the `/services`
+  page.
 - **Optional units** (`dashboard/config.py::VIVI_SERVICES`) — an entry may carry
   `"optional": true` when the unit is real but idle until someone acts on the hardware it watches
   (`unudhcpd` and `usb-tethering` on begonia), is D-Bus or socket activated and only exists while
