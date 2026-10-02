@@ -223,12 +223,17 @@
 
     function renderVivi(data) {
         if (!data) return;
-        setText('begonia-vivi-active', data.active_count + ' active');
-        setText('begonia-vivi-installed', data.installed_count + ' installed');
+        var requiredActive = data.required_active_count == null ? data.active_count : data.required_active_count;
+        var requiredTotal = data.required_count == null ? data.installed_count : data.required_count;
+        var optionalIdle = data.optional_idle_count || 0;
+
+        setText('begonia-vivi-active', requiredActive + '/' + requiredTotal + ' active');
+        setText('begonia-vivi-installed',
+            data.installed_count + ' installed' + (optionalIdle ? ' · ' + optionalIdle + ' optional idle' : ''));
         setText('begonia-vivi-failed', data.failed_count + ' failed');
 
         var activeNode = el('begonia-vivi-active');
-        if (activeNode) activeNode.classList.toggle('is-good', data.failed_count === 0 && data.active_count > 0);
+        if (activeNode) activeNode.classList.toggle('is-good', data.failed_count === 0 && requiredActive > 0);
         var failedNode = el('begonia-vivi-failed');
         if (failedNode) failedNode.classList.toggle('is-bad', data.failed_count > 0);
 
@@ -246,11 +251,17 @@
             var name = document.createElement('span');
             name.className = 'vivi-name';
             name.textContent = svc.label || svc.unit;
-            name.title = svc.unit + ' (' + svc.scope + ')';
+            name.title = svc.unit + ' (' + svc.scope + ')' + (svc.optional ? ', optional' : '');
 
             var state = document.createElement('span');
             state.className = 'vivi-state';
-            state.textContent = svc.installed ? (svc.state || 'unknown') : 'not installed';
+            if (!svc.installed) {
+                state.textContent = 'not installed';
+            } else if (svc.optional && svc.state !== 'active' && svc.state !== 'failed') {
+                state.textContent = (svc.state || 'unknown') + ' (optional)';
+            } else {
+                state.textContent = svc.state || 'unknown';
+            }
 
             var mem = document.createElement('span');
             mem.className = 'vivi-mem';

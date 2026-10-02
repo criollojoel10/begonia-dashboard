@@ -422,6 +422,13 @@ reported as `Generic Linux`.
   `begonia-firewall`, `display-off`, `mediatek-wifi`). A unit that does not exist reports
   `not installed` instead of breaking the panel, so prune stale entries when a unit goes away;
   `installed` is decided by systemd `LoadState`, not by active state.
+- **Optional units** (`dashboard/config.py::VIVI_SERVICES`) — an entry may carry
+  `"optional": true` when the unit is real but idle until someone acts on the hardware it watches
+  (`unudhcpd` and `usb-tethering` on begonia). Optional units are still reported and listed with
+  their state, but they are excluded from the `required_count` / `required_active_count` counters,
+  from the health verdict while merely inactive, and from the Vivi sparkline. A unit in state
+  `failed` still degrades the verdict regardless of the flag, and the overview shows the idle ones
+  as `<state> (optional)`.
 - **OpenClaw scratch watchdog** (`dashboard/services/openclaw_scratch.py`) — measures
   `~/.openclaw/tmp/plugin-captures` and warns when it exceeds the configured budget or when stale
   instance directories pile up. OpenClaw copies its whole plugin tree per run, so a coarse size

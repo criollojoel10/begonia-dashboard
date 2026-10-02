@@ -79,7 +79,10 @@ class ViviCollector(MetricCollector):
 
     def _on_sample(self, sample: dict) -> None:
         # History tracks how many units are up, which is what a sparkline of
-        # "is the local AI stack alive" should show.
-        active = sample.get("active_count")
+        # "is the local AI stack alive" should show. Required units only: an
+        # optional unit idling would otherwise show up as lost uptime.
+        active = sample.get("required_active_count")
+        if active is None:
+            active = sample.get("active_count")
         if isinstance(active, int):
             self._buffer.append(float(active))

@@ -211,18 +211,25 @@ def compute_health() -> Dict[str, object]:
     else:
         add("storage", "Storage", "ok", f"{worst_disk:.0f}% on {storage['mount']}", storage)
 
-    # Vivi-AI workloads
+    # Vivi-AI workloads. Only the required units gate the verdict: an optional
+    # unit (usb tethering and its DHCP helper) is idle until someone acts, and a
+    # permanently YELLOW board for that reason trains the reader to ignore it.
+    # A failed unit is still "bad" whatever its role.
     vivi = get_vivi_services()
     failed = int(vivi.get("failed_count") or 0)
+    required_active = int(vivi.get("required_active_count") or 0)
+    required_total = int(vivi.get("required_count") or 0)
+    optional_idle = int(vivi.get("optional_idle_count") or 0)
+    idle_note = f", {optional_idle} optional idle" if optional_idle else ""
     if not vivi.get("available"):
         add("vivi", "Vivi-AI", "unknown", "no configured unit found", vivi)
     elif failed:
         add("vivi", "Vivi-AI", "bad", f"{failed} unit(s) failed", vivi)
-    elif int(vivi.get("active_count") or 0) < int(vivi.get("installed_count") or 0):
+    elif required_total and required_active < required_total:
         add("vivi", "Vivi-AI", "warn",
-            f"{vivi['active_count']}/{vivi['installed_count']} active", vivi)
+            f"{required_active}/{required_total} required active{idle_note}", vivi)
     else:
-        add("vivi", "Vivi-AI", "ok", f"{vivi['active_count']} active", vivi)
+        add("vivi", "Vivi-AI", "ok", f"{required_active} active{idle_note}", vivi)
 
     # OpenClaw plugin-capture scratch. Never "bad": a large tree is normal while
     # the gateway is working, so this only ever degrades the verdict to YELLOW.

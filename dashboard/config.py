@@ -158,6 +158,11 @@ OPENCLAW_SCRATCH_INSTANCE_WARN = _env_int("BEGONIA_OPENCLAW_SCRATCH_INSTANCES", 
 # Keep this list in sync with the units that really run on begonia
 # (systemctl list-units / systemctl --user list-units); a stale entry shows up
 # as a permanent "not installed" row. See docs/08-begonia-dashboard.md.
+#
+# "optional": true marks a unit that is installed and reported but idle in
+# normal operation, because it only matters when someone acts (tethering a
+# phone, plugging a cable). Optional units never degrade the health verdict
+# while they are merely inactive; a unit in state "failed" still does.
 VIVI_SERVICES = [
     # user manager (joel)
     {"unit": "openclaw-gateway.service", "scope": "user", "label": "OpenClaw Gateway"},
@@ -171,8 +176,8 @@ VIVI_SERVICES = [
     {"unit": "tailscaled.service", "scope": "system", "label": "Tailscale"},
     {"unit": "sshd.service", "scope": "system", "label": "SSH"},
     {"unit": "NetworkManager.service", "scope": "system", "label": "Network"},
-    {"unit": "unudhcpd.service", "scope": "system", "label": "USB Tethering DHCP"},
-    {"unit": "usb-tethering.service", "scope": "system", "label": "USB Tethering"},
+    {"unit": "unudhcpd.service", "scope": "system", "label": "USB Tethering DHCP", "optional": True},
+    {"unit": "usb-tethering.service", "scope": "system", "label": "USB Tethering", "optional": True},
     {"unit": "begonia-dashboard.service", "scope": "system", "label": "Dashboard"},
     {"unit": "begonia-firewall.service", "scope": "system", "label": "Firewall (nftables)"},
     {"unit": "display-off.service", "scope": "system", "label": "Backlight Off (headless)"},

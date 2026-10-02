@@ -8,7 +8,10 @@ local AI infrastructure is up without shelling into the device.
 
 Units are configured in ``dashboard.config.VIVI_SERVICES``. Missing units are
 reported as ``installed: False`` rather than raising, so the panel keeps
-working on machines that do not run the stack at all.
+working on machines that do not run the stack at all. A unit marked
+``optional`` in that list is reported the same way but excluded from the
+required/active counters, because it idles until someone acts on the hardware it
+watches.
 """
 from __future__ import annotations
 
@@ -90,6 +93,10 @@ def get_vivi_services(services: Optional[List[Dict[str, str]]] = None) -> Dict[s
         unit = spec["unit"]
         scope = spec.get("scope", "system")
         label = spec.get("label", unit)
+        # Optional units are real, but only idle in normal operation (a unit tied
+        # to hardware or a manual action). They are reported and shown, never
+        # counted as a degraded workload.
+        optional = bool(spec.get("optional", False))
 
         props = _show_unit(unit, scope)
         load_state = (props or {}).get("LoadState", "")
@@ -98,6 +105,7 @@ def get_vivi_services(services: Optional[List[Dict[str, str]]] = None) -> Dict[s
                 "unit": unit,
                 "scope": scope,
                 "label": label,
+                "optional": optional,
                 "installed": False,
                 "state": (props or {}).get("ActiveState") or "unknown",
                 "severity": "idle",
@@ -113,6 +121,7 @@ def get_vivi_services(services: Optional[List[Dict[str, str]]] = None) -> Dict[s
             "unit": unit,
             "scope": scope,
             "label": label,
+            "optional": optional,
             "installed": True,
             "state": state,
             "sub_state": props.get("SubState"),
@@ -126,13 +135,23 @@ def get_vivi_services(services: Optional[List[Dict[str, str]]] = None) -> Dict[s
 
     installed = [entry for entry in entries if entry["installed"]]
     active = [entry for entry in installed if entry["state"] == "active"]
+    # A failed unit is a fact worth surfacing even when optional, so failed_count
+    # stays over every installed unit; only the "N/M active" warn uses required.
     failed = [entry for entry in installed if entry["state"] == "failed"]
+    required = [entry for entry in installed if not entry["optional"]]
+    required_active = [entry for entry in required if entry["state"] == "active"]
+    optional_idle = [
+        entry for entry in installed if entry["optional"] and entry["state"] != "active"
+    ]
 
     return {
         "available": bool(installed),
         "count": len(entries),
         "installed_count": len(installed),
         "active_count": len(active),
+        "required_count": len(required),
+        "required_active_count": len(required_active),
+        "optional_idle_count": len(optional_idle),
         "failed_count": len(failed),
         "services": entries,
     }
