@@ -416,15 +416,19 @@ reported as `Generic Linux`.
   services, memory usage, zram swap saturation, PSI stalls, thermal readings, storage usage,
   Vivi-AI service state and OpenClaw scratch size.
 - **Vivi-AI overview** (`dashboard/services/vivi.py`) — status, memory, restart count and uptime for
-  every unit in `dashboard/config.py::VIVI_SERVICES` (16 on begonia: `openclaw-gateway`,
+  every unit in `dashboard/config.py::VIVI_SERVICES` (23 on begonia: `openclaw-gateway`,
   `opencode-free-proxy`, `opencode-run-bridge`, `dbus-broker`, `opencode-web`, `vivi-fitness`, `nginx`,
-  `tailscaled`, `sshd`, `NetworkManager`, `unudhcpd`, `usb-tethering`, `begonia-dashboard`,
-  `begonia-firewall`, `display-off`, `mediatek-wifi`). A unit that does not exist reports
+  `tailscaled`, `sshd`, `NetworkManager`, `NetworkManager-wait-online`, `NetworkManager-dispatcher`,
+  `systemd-resolved`, `systemd-timesyncd`, `unudhcpd`, `usb-tethering`, `begonia-dashboard`,
+  `begonia-firewall`, `display-off`, `mediatek-wifi`, `haveged`, `wpa_supplicant`,
+  `iio-sensor-proxy`). A unit that does not exist reports
   `not installed` instead of breaking the panel, so prune stale entries when a unit goes away;
   `installed` is decided by systemd `LoadState`, not by active state.
 - **Optional units** (`dashboard/config.py::VIVI_SERVICES`) — an entry may carry
   `"optional": true` when the unit is real but idle until someone acts on the hardware it watches
-  (`unudhcpd` and `usb-tethering` on begonia). Optional units are still reported and listed with
+  (`unudhcpd` and `usb-tethering` on begonia) or is D-Bus activated and only exists while its
+  consumer asks for it (`wpa_supplicant` and `iio-sensor-proxy` on begonia, which run but report
+  `is-enabled=disabled`). Optional units are still reported and listed with
   their state, but they are excluded from the `required_count` / `required_active_count` counters,
   from the health verdict while merely inactive, and from the Vivi sparkline. A unit in state
   `failed` still degrades the verdict regardless of the flag, and the overview shows the idle ones
