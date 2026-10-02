@@ -1,5 +1,5 @@
 """
-System and device information detection service for Lavender.
+System and device information detection service for Begonia Dashboard.
 Dynamically discovers hardware model, OS distribution, kernel, architecture, and hostname.
 Avoids hardcoding any specific phone or board model.
 """
@@ -15,7 +15,8 @@ def get_device_model() -> str:
     """
     Retrieve the hardware/board device model.
     Priority order:
-    1. Linux Device Tree (ARM mobile/smartphones like Redmi Note 7, SBCs):
+    1. Linux Device Tree (ARM mobile/smartphones such as the Redmi Note 8 Pro
+       ``begonia``, SBCs):
        /sys/firmware/devicetree/base/model or /proc/device-tree/model
     2. postmarketOS / Alpine deviceinfo:
        /etc/deviceinfo (deviceinfo_name)
@@ -154,8 +155,11 @@ def get_system_info() -> Dict[str, Any]:
     Result is cached since hardware model, OS name, and architecture do not
     change during runtime.
     """
+    from dashboard.platforms import detect_platform
+
     model = get_device_model()
     os_info = get_os_info()
+    platform_profile = detect_platform()
 
     return {
         "model": model,
@@ -166,4 +170,11 @@ def get_system_info() -> Dict[str, Any]:
         "kernel": platform.release(),
         "arch": platform.machine(),
         "hostname": socket.gethostname(),
+        # Platform profile: "begonia" on a Redmi Note 8 Pro, "generic"
+        # elsewhere. Used for labelling only, never for path building.
+        "platform_key": platform_profile.key,
+        "platform_name": platform_profile.name,
+        "soc": platform_profile.soc,
+        "soc_short": platform_profile.soc_short,
+        "is_generic_platform": platform_profile.is_generic,
     }

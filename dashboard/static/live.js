@@ -2,7 +2,7 @@
 (function() {
     'use strict';
 
-    var SSE_URL = '/api/device/live?metrics=cpu,ram,thermal,battery,network';
+    var SSE_URL = '/api/device/live?metrics=cpu,ram,thermal,battery,network,zram,pressure,platform,vivi';
 
     var latest = { cpu: null, ram: null, thermal: null, battery: null, network: null };
     var buffers = { cpu: [], ram: [], batt: [], net_up: [], net_down: [] };
@@ -720,6 +720,11 @@
                 return;
             }
             var data = msg.data;
+            /* Begonia Dashboard extension layer owns zram, pressure, platform
+               and vivi. It returns true when the metric was consumed here. */
+            if (window.BegoniaLive && window.BegoniaLive.handle(metric, data)) {
+                return;
+            }
             if (metric === 'cpu') { updateCpu(data); }
             else if (metric === 'ram') { updateRam(data); }
             else if (metric === 'thermal') { updateThermal(data); updateThermalTop({zones: data}); }

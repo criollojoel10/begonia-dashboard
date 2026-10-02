@@ -1,5 +1,9 @@
 """
-FastAPI application for Lavender.
+FastAPI application for Begonia Dashboard.
+
+Begonia Dashboard is a fork of Lavender by minhazul73 (MIT). The web UI is
+branded through :mod:`dashboard.branding`; upstream attribution is rendered in
+the sidebar and on the login page and must not be removed.
 """
 import os
 import asyncio
@@ -13,7 +17,14 @@ from fastapi.staticfiles import StaticFiles
 from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
 
-from dashboard.config import SESSION_COOKIE_NAME, APP_VERSION
+from dashboard import branding
+from dashboard.config import (
+    APP_VERSION,
+    AUTH_ENABLED,
+    HOST,
+    PORT,
+    VIVI_FITNESS_URL,
+)
 from dashboard.auth.session import UserSession, session_store
 from dashboard.auth.deps import get_current_session, require_session
 from dashboard.services.device_info import get_system_info
@@ -34,6 +45,44 @@ def _get_git_hash() -> str:
 
 _GIT_HASH = _get_git_hash()
 
+# Architecture badge label per detected machine type. Resolved at render time
+# so the UI never claims to be ARM when running on a laptop.
+_ARCH_BADGES = {
+    "aarch64": "ARCH ARM64",
+    "arm64": "ARCH ARM64",
+    "armv7l": "ARCH ARM32",
+    "armv6l": "ARCH ARM32",
+    "x86_64": "X86_64",
+    "amd64": "X86_64",
+    "i686": "X86",
+}
+
+
+def _brand_context() -> dict:
+    """Brand identity plus the resolved platform badge set."""
+    info = get_system_info()
+    arch = str(info.get("arch") or "").lower()
+    arch_badge = _ARCH_BADGES.get(arch, (arch or "linux").upper())
+
+    badges = ["LIVE", arch_badge]
+    badges.extend(branding.STATIC_BADGES[1:])  # SYSTEMD, TAILSCALE, VIVI-AI
+
+    return {
+        "app_name": branding.APP_NAME,
+        "app_short_name": branding.APP_SHORT_NAME,
+        "app_subtitle": branding.APP_SUBTITLE,
+        "app_identity": branding.APP_IDENTITY,
+        "brand_badges": badges,
+        "upstream_name": branding.UPSTREAM_NAME,
+        "upstream_author": branding.UPSTREAM_AUTHOR,
+        "upstream_url": branding.UPSTREAM_URL,
+        "project_url": branding.PROJECT_URL,
+        "derivation_notice": branding.DERIVATION_NOTICE,
+        "bind_host": HOST,
+        "bind_port": PORT,
+        "vivi_fitness_url": VIVI_FITNESS_URL,
+    }
+
 
 class Templates:
     """Jinja2 template renderer with autoescape=False so script blocks
@@ -53,7 +102,12 @@ class Templates:
         context.setdefault("session", session)
         context.setdefault("request", request)
         context.setdefault("app_version", APP_VERSION)
+        # Templates hide the credential UI (sign in/out, admin elevation) when
+        # the login gate is off.
+        context.setdefault("auth_enabled", AUTH_ENABLED)
         context.setdefault("device_info", get_system_info())
+        for key, value in _brand_context().items():
+            context.setdefault(key, value)
         body = tmpl.render(**context, git_hash=_GIT_HASH)
         return HTMLResponse(content=body, status_code=200, media_type="text/html")
 
@@ -74,25 +128,28 @@ async def _periodic_session_cleanup():
 async def lifespan(app: FastAPI):
     cleanup_task = asyncio.create_task(_periodic_session_cleanup())
 
-    # Pre-seed active session for current local user for localhost access
-    try:
-        import getpass, pwd
-        from dashboard.auth.session import UserSession
-        cur_user = getpass.getuser()
-        pw = pwd.getpwnam(cur_user)
-        dev_sid = "dev-session-active"
-        session_store._sessions[dev_sid] = UserSession(
-            session_id=dev_sid,
-            username=cur_user,
-            uid=pw.pw_uid,
-            gid=pw.pw_gid,
-            home=pw.pw_dir,
-            shell=pw.pw_shell,
-            groups=["wheel", "sudo", cur_user],
-            is_admin=True,
-        )
-    except Exception:
-        pass
+    # Pre-seed active session for current local user for localhost access.
+    # Only relevant when the login gate is on; with AUTH_ENABLED off every
+    # request already resolves to the local session from auth.deps.
+    if AUTH_ENABLED:
+        try:
+            import getpass, pwd
+            from dashboard.auth.session import UserSession
+            cur_user = getpass.getuser()
+            pw = pwd.getpwnam(cur_user)
+            dev_sid = "dev-session-active"
+            session_store._sessions[dev_sid] = UserSession(
+                session_id=dev_sid,
+                username=cur_user,
+                uid=pw.pw_uid,
+                gid=pw.pw_gid,
+                home=pw.pw_dir,
+                shell=pw.pw_shell,
+                groups=["wheel", "sudo", cur_user],
+                is_admin=True,
+            )
+        except Exception:
+            pass
 
     yield
     cleanup_task.cancel()
@@ -103,13 +160,14 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Lavender",
-    description="Web UI for Linux system management and device monitoring",
+    title=branding.APP_NAME,
+    description=branding.DESCRIPTION,
     version=APP_VERSION,
     lifespan=lifespan,
 )
 
-# Trust all hosts since we bind to 0.0.0.0
+# Trust all hosts: the default bind is loopback and the intended exposure is
+# Tailscale Serve, which forwards the MagicDNS Host header.
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
 
 # Attach rate limiter to app state
@@ -153,14 +211,20 @@ app.include_router(live.router, prefix="/api")
 # Login page route (public)
 @app.get("/login", response_class=HTMLResponse, summary="Sign in page")
 async def page_login(request: Request) -> HTMLResponse:
+    next_url = request.query_params.get("next", "/")
+    if not next_url.startswith("/") or next_url.startswith("//"):
+        next_url = "/"
+    # Without the login gate there is nothing to sign in to: send visitors back
+    # to the requested page instead of rendering a form that cannot matter.
+    if not AUTH_ENABLED:
+        return RedirectResponse(url=next_url)
     session = getattr(request.state, "session", None)
     if session:
-        next_url = request.query_params.get("next", "/")
-        return RedirectResponse(url=next_url if next_url.startswith("/") else "/")
+        return RedirectResponse(url=next_url)
     return templates.TemplateResponse(
         request=request,
         name="login.html",
-        context={"request": request},
+        context={"request": request, "next_url": next_url},
     )
 
 
@@ -211,4 +275,3 @@ for _path, (_template, _summary) in PAGES.items():
 @app.get("/battery", response_class=RedirectResponse, summary="Redirect to live overview")
 async def page_battery_redirect() -> RedirectResponse:
     return RedirectResponse(url="/", status_code=307)
-

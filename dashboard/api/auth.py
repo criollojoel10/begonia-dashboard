@@ -10,6 +10,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from dashboard.config import (
+    AUTH_ENABLED,
     SESSION_COOKIE_NAME,
     SESSION_MAX_IDLE_MINUTES,
     LOGIN_RATE_LIMIT,
@@ -66,6 +67,21 @@ async def api_login(
         password = password or ""
         next = next or "/"
 
+    # Sanitize next parameter to prevent open redirects
+    safe_next = next if next and next.startswith("/") and not next.startswith("//") else "/"
+
+    # Login gate disabled: the request is already the unit user, so there is
+    # nothing to verify. Answer without touching PAM or the session store.
+    if not AUTH_ENABLED:
+        logger.info("Login ignored: authentication disabled (BEGONIA_AUTH unset)")
+        if is_json:
+            return JSONResponse(content={
+                "success": True,
+                "auth_enabled": False,
+                "redirect": safe_next,
+            })
+        return RedirectResponse(url=safe_next, status_code=status.HTTP_303_SEE_OTHER)
+
     if not username or not password:
         err_msg = "Username and password are required"
         if is_json:
@@ -96,9 +112,6 @@ async def api_login(
     # Authentication succeeded: create session and set signed cookie
     session = await session_store.create(username, user_info)
     signed_token = session_store.sign_session_id(session.session_id)
-
-    # Sanitize next parameter to prevent open redirects
-    safe_next = next if next and next.startswith("/") and not next.startswith("//") else "/"
 
     if is_json:
         res = JSONResponse(content={
@@ -159,6 +172,12 @@ async def api_elevate(
     Cockpit-style administrative elevation.
     Prompts for user's Linux password and refreshes sudo ticket locally.
     """
+    if not AUTH_ENABLED:
+        # Nothing to verify: the session already runs as the unit user and sudo is
+        # NOPASSWD for it, so the elevation ticket would be a no-op prompt.
+        session.elevate()
+        return {"success": True, "is_admin": True, "expires_in": session.admin_remaining_seconds()}
+
     password = payload.password
     if not password:
         raise HTTPException(status_code=400, detail="Password is required")
@@ -183,6 +202,11 @@ async def api_elevate(
 @router.post("/drop-admin")
 async def api_drop_admin(session: UserSession = Depends(require_session)):
     """Drop active administrative elevation and revoke sudo ticket."""
+    if not AUTH_ENABLED:
+        # The cached auto-session must stay elevated or every admin action would
+        # start answering 403 until the service is restarted.
+        return {"success": True, "is_admin": True, "auth_enabled": False}
+
     await drop_sudo_ticket()
     session.drop_elevation()
     logger.info("User %s dropped administrative access", session.username)

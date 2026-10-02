@@ -1,10 +1,22 @@
-![Lavender Banner](https://github.com/user-attachments/assets/d81858ff-fd52-4931-a35d-6a3e8664a655)
+# Begonia Dashboard
 
-# Lavender
+A lightweight, responsive FastAPI web dashboard for Linux system management and real-time device monitoring, optimized for the **Xiaomi Redmi Note 8 Pro** (`begonia`, MediaTek Helio G90T / MT6785) running Arch Linux ARM or Kupfer Linux.
 
-A lightweight, responsive FastAPI web dashboard for Linux system management and real-time device monitoring. Built with a sleek dark-theme UI, native Linux PAM authentication, Cockpit-style administrative elevation, and real-time Server-Sent Events (SSE) streaming.
+Begonia Dashboard monitors CPU, memory, zram, PSI pressure, battery, thermal zones, storage, networking, systemd services, packages and Vivi-AI workloads over Server-Sent Events. The hardware and OS detection stays generic: any other Linux host falls back to a `Generic Linux` profile instead of pretending to be a phone.
 
-Originally designed for postmarketOS on ARM64 mobile devices (such as the Redmi Note 7 `lavender`), it features dynamic hardware and OS detection that makes it equally well-suited for single-board computers (Raspberry Pi, Pine64), Linux phones, laptops, and home servers.
+## Origin
+
+Begonia Dashboard is a fork of [Lavender](https://github.com/minhazul73/lavender) by
+[minhazul73](https://github.com/minhazul73), distributed under the MIT License. The original
+license and copyright notice are preserved in this repository, and the upstream attribution is
+rendered in the sidebar of every page and on the sign-in screen.
+
+See [NOTICE.md](NOTICE.md) for the full derivation notice and the list of Begonia-specific
+additions.
+
+Upstream Lavender was originally designed for postmarketOS on ARM64 mobile devices (such as the
+Redmi Note 7 `lavender`), and its dynamic hardware and OS detection makes it equally well-suited
+for single-board computers (Raspberry Pi, Pine64), Linux phones, laptops, and home servers.
 
 ---
 
@@ -38,6 +50,7 @@ Originally designed for postmarketOS on ARM64 mobile devices (such as the Redmi 
   - **CPU Power Profiles:** Live governor detection and one-click switching across all CPU cores (`powersave`, `schedutil` / `ondemand`, `performance`).
   - **Scheduled Power Actions:** Quick-timer presets (5m, 15m, 30m, 60m), custom countdown timers with broadcast wall messages (`shutdown -r +N`, `shutdown -h +N`), live pending schedule status banner, and one-click cancellation (`shutdown -c`).
 - **Systemd Service Management** — Manage system and user services (`systemctl` and `systemctl --user`). Filter by scope (`user`, `system`, `all`) and state (`active`, `inactive`, `failed`), navigate with pagination, inspect unit status, view real-time journalctl logs in an embedded dark terminal window with copyable commands, and execute lifecycle actions (`start`, `stop`, `restart`, `enable`, `disable`).
+- **Vivi Fitness link (optional)** — Opens the separate, tailnet-only Mi Fitness training dashboard in a new tab. It does not merge sports data into this system-administration app; configure `VIVI_FITNESS_URL` only after the independent service is deployed.
 - **Storage & Mounts** — Disk usage overview with visual usage bars, automatic filtering of pseudo/virtual filesystems (`tmpfs`, `devpts`), and external storage detection (`/mnt`, `/media`, `/sdcard`).
 - **Process Management** — Interactive process monitor with sorting by CPU, memory, PID, user, or name, supporting both standard `procps` and `busybox ps`. Terminate processes with admin privileges (`kill -9`).
 - **Network & Diagnostics** — 
@@ -53,7 +66,7 @@ Originally designed for postmarketOS on ARM64 mobile devices (such as the Redmi 
 
 - **Backend:** FastAPI (async) + Uvicorn
 - **Frontend:** Vanilla JavaScript (ES6+, no frameworks) + Jinja2 templates
-- **Styling:** Custom responsive CSS, dark theme, Lavender theme palette (`--lavender-*`, `--grad-lavender`, glassmorphism, accent glow effects, micro-animations)
+- **Styling:** Custom responsive CSS, dark theme, petroleum-blue / cyan / violet Begonia palette (`--begonia-*`, applied as a token remap layer in `dashboard/static/begonia.css`), glassmorphism, accent glow effects, micro-animations
 - **Real-time:** Server-Sent Events (SSE) via FastAPI `StreamingResponse` and background `MetricCollector` ring buffers
 - **Package Management:** Multi-backend adapter architecture (`apk`, `apt`, `pacman`, `dnf`) with in-memory TTL caching
 - **Authentication:** Native Linux PAM (`python-pam`), shadow verification, `sudo -v` timestamp tickets, signed cookies (`itsdangerous`)
@@ -75,8 +88,8 @@ Originally designed for postmarketOS on ARM64 mobile devices (such as the Redmi 
 ### Installation
 
 ```bash
-git clone https://github.com/minhazul73/lavender.git
-cd lavender
+git clone https://github.com/criollojoel10/begonia-dashboard.git
+cd begonia-dashboard
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -86,39 +99,77 @@ pip install -r requirements.txt
 
 **Manual / Development:**
 ```bash
-python -m uvicorn dashboard.main:app --host 0.0.0.0 --port 8080 --reload
+python -m uvicorn dashboard.main:app --host 127.0.0.1 --port 8787 --reload
 ```
 
 **As a systemd service:**
-An example service file is provided in [`systemd/lavender.service`](systemd/lavender.service).
+A hardened system unit is provided in
+[`systemd/begonia-dashboard.service`](systemd/begonia-dashboard.service). It binds to loopback and
+is meant to be published to a private tailnet with `tailscale serve` — see
+[Deployment](#deployment) below.
 
-To install as a systemd user service:
 ```bash
-mkdir -p ~/.config/systemd/user/
-cp systemd/lavender.service ~/.config/systemd/user/
-# Edit WorkingDirectory and ExecStart paths in ~/.config/systemd/user/lavender.service to match your environment
-systemctl --user daemon-reload
-systemctl --user enable --now lavender
+sudo install -Dm644 systemd/begonia-dashboard.service /etc/systemd/system/begonia-dashboard.service
+# Edit User= and WorkingDirectory= to match your environment
+sudo systemctl daemon-reload
+sudo systemctl enable --now begonia-dashboard.service
 ```
 
 ### Access
 
-Open `http://<device-ip>:8080` in your web browser. 
+Open `http://127.0.0.1:8787` on the device itself, or the `tailscale serve` URL from any node in
+your tailnet. The default bind address is loopback on purpose: the dashboard performs privileged
+system administration.
 - The **Overview** page (`/`) is publicly viewable without authentication for quick device telemetry.
-- Protected pages and administrative actions require signing in with your Linux system credentials.
+- Every other page (`/services`, `/processes`, `/storage`, `/network`, `/packages`, `/users`,
+  `/power`) needs a session. Whether that means a login form or an automatic local session
+  depends on `AUTH_ENABLED` (see below).
 
 ---
 
 ## Authentication & Security
 
-Lavender authenticates directly against your host Linux operating system:
+### Auth gate off by default (`AUTH_ENABLED=false`)
+
+The default is no login form. `dashboard/config.py` reads `AUTH_ENABLED` from `BEGONIA_AUTH` /
+`DASHBOARD_AUTH`, defaulting to **false**, and `dashboard/auth/deps.py::get_auto_session` hands
+every request a single cached `UserSession` for the account the unit already runs as, with
+`is_admin=True`. That account is `joel` in the begonia deployment.
+
+The auto-session grants no privilege the process did not already hold: the unit runs as `joel`,
+`sudo` is `NOPASSWD` for it, and the dashboard only binds `127.0.0.1`. What the gate removes is
+the password prompt, not a boundary that the process was respecting before. It is only safe
+because `tailscale serve` is the single publication path and Tailscale is the access boundary.
+
+With the gate off:
+
+- `GET /login` redirects to the requested page instead of rendering a form.
+- `POST /auth/login` answers `{"success": true, "auth_enabled": false}` without touching PAM.
+- `POST /auth/elevate` and `/auth/drop-admin` are no-ops that keep the session elevated, so admin
+  actions do not start answering 403.
+- `templates/base.html` hides sign in/out and the elevation modal, showing a read-only chip with
+  the username instead.
+
+Restore the PAM login flow without editing code:
+
+```bash
+# /etc/begonia-dashboard.env  (mode 0600)
+BEGONIA_AUTH=1
+```
+
+or a drop-in in `/etc/systemd/system/begonia-dashboard.service.d/`, then restart the unit. Set
+`BEGONIA_AUTH=1` before publishing the dashboard anywhere outside its own tailnet.
+
+### Login flow when the gate is on
+
+Begonia Dashboard authenticates directly against your host Linux operating system:
 
 1. **Native Verification:** When logging in via `/auth/login`, credentials are validated in sequence against:
    - Direct `/etc/shadow` verification (if accessible)
    - Linux PAM services (`PAM_SERVICE`, fallback to `base-auth`, `login`, etc.)
    - Sudo credential check (`sudo -S -p '' -v`)
    - Doas validation (`doas -C /etc/doas.conf true`)
-2. **Session Storage:** A cryptographically signed session cookie (`rn7_session`) is issued using `itsdangerous`. Sessions are stored in-memory with a sliding 60-minute idle expiration.
+2. **Session Storage:** A cryptographically signed session cookie (`begonia_session`) is issued using `itsdangerous`. Sessions are stored in-memory with a sliding 60-minute idle expiration.
 3. **Background Cleanup:** A background task runs every 5 minutes to purge expired idle sessions.
 4. **Cockpit-style Elevation:** Users in administrative groups (`wheel`, `sudo`, `root` or UID 0) can elevate their session by entering their password. This refreshes a local sudo timestamp ticket for 15 minutes. Root sessions (UID 0 / `root`) are automatically elevated permanently.
 5. **Elevation Revocation:** Non-root users can revoke elevation at any time via the top bar "Turn off" button, which calls `/auth/drop-admin` and runs `sudo -k` to drop the timestamp ticket.
@@ -133,12 +184,21 @@ Configuration values are located in [`dashboard/config.py`](dashboard/config.py)
 ### General Settings
 | Variable | Default | Description |
 | :--- | :--- | :--- |
-| `PORT` | `8080` | Web server port |
-| `HOST` | `"0.0.0.0"` | Bind network interface |
+| `PORT` | `8787` | Web server port (env `BEGONIA_PORT` / `DASHBOARD_PORT`) |
+| `HOST` | `"127.0.0.1"` | Bind network interface (env `BEGONIA_HOST` / `DASHBOARD_HOST`) |
 | `DEBUG` | `False` | Debug mode toggle |
-| `APP_VERSION` | `"0.4.0"` | Application version |
+| `APP_VERSION` | `"0.1.0"` | Application version |
+| `PLATFORM_PROFILE` | `"auto"` | Force a platform profile instead of device tree detection (`BEGONIA_PLATFORM`) |
 | `THERMAL_WARN_THRESHOLD` | `70000` | Thermal warning threshold in millidegrees C (70°C) |
 | `MEMORY_PRESSURE_THRESHOLD`| `0.85` | RAM fraction used to trigger memory pressure warning (85%) |
+| `HEALTH_THERMAL_WARN_C` | `70.0` | Health verdict thermal warning (°C, `BEGONIA_THERMAL_WARN_C`) |
+| `HEALTH_THERMAL_CRIT_C` | `80.0` | Health verdict thermal failure (°C, `BEGONIA_THERMAL_CRIT_C`) |
+| `HEALTH_ZRAM_WARN_RATIO` | `0.9` | zram swap saturation that degrades the verdict (`BEGONIA_ZRAM_WARN_RATIO`) |
+| `HEALTH_PSI_WARN` | `10.0` | PSI stall percentage that degrades the verdict (`BEGONIA_PSI_WARN`) |
+| `OPENCLAW_SCRATCH_DIR` | `"~/.openclaw/tmp/plugin-captures"` | Scratch tree watched by the health check (`BEGONIA_OPENCLAW_SCRATCH`) |
+| `OPENCLAW_SCRATCH_WARN_BYTES` | `6442450944` | Scratch size that degrades the verdict, 6 GiB (`BEGONIA_OPENCLAW_SCRATCH_WARN_BYTES`) |
+| `OPENCLAW_SCRATCH_INSTANCE_WARN` | `2` | Instance directories that count as stale scratch (`BEGONIA_OPENCLAW_SCRATCH_INSTANCES`) |
+| `VIVI_FITNESS_URL` | *(empty)* | Optional HTTPS link to the separate Vivi Fitness dashboard; invalid/non-HTTPS URLs are ignored |
 | `LOG_LINES` | `50` | Default number of log lines to return |
 | `TOP_PROCESSES` | `20` | Default process limit |
 | `TOP_DIRS` | `10` | Top directories limit for disk usage |
@@ -146,10 +206,11 @@ Configuration values are located in [`dashboard/config.py`](dashboard/config.py)
 ### Auth & Session Settings
 | Variable | Default | Description |
 | :--- | :--- | :--- |
-| `SESSION_COOKIE_NAME` | `"rn7_session"` | Session cookie name |
-| `SESSION_MAX_IDLE_MINUTES` | `60` | Inactivity timeout before session expires |
-| `ADMIN_ELEVATION_TIMEOUT_MINUTES` | `15` | Administrative elevation duration |
-| `SESSION_SECRET_KEY` | *(env or default)* | Cookie signing key (set via `DASHBOARD_SECRET_KEY`) |
+| `AUTH_ENABLED` | `False` | Enable the PAM login gate (env `BEGONIA_AUTH` / `DASHBOARD_AUTH`); off means every request runs as a local auto-session |
+| `SESSION_COOKIE_NAME` | `"begonia_session"` | Session cookie name |
+| `SESSION_MAX_IDLE_MINUTES` | `60` | Inactivity timeout before session expires (env `BEGONIA_SESSION_MAX_IDLE_MINUTES`) |
+| `ADMIN_ELEVATION_TIMEOUT_MINUTES` | `15` | Administrative elevation duration (env `BEGONIA_ELEVATION_TIMEOUT_MINUTES`) |
+| `SESSION_SECRET_KEY` | *(env or default)* | Cookie signing key (set via `BEGONIA_SECRET_KEY` or `DASHBOARD_SECRET_KEY`) |
 | `PAM_SERVICE` | `"login"` | Primary PAM service name (set via `PAM_SERVICE`) |
 | `LOGIN_RATE_LIMIT` | `"10/minute"` | Rate limit for login endpoint |
 
@@ -161,7 +222,11 @@ Configuration values are located in [`dashboard/config.py`](dashboard/config.py)
 | `SSE_THERMAL_INTERVAL_MS` | `5000` | Thermal zones collection interval (5s) |
 | `SSE_BATTERY_INTERVAL_MS` | `3000` | Battery metrics collection interval (3s) |
 | `SSE_NETWORK_INTERVAL_MS` | `2000` | Network rate collection interval (2s) |
-| `SSE_*_BUFFER` | `20`–`30` | Datapoints retained in ring buffers for sparklines |
+| `SSE_ZRAM_INTERVAL_MS` | `3000` | zram collection interval (3s) |
+| `SSE_PRESSURE_INTERVAL_MS` | `2000` | PSI stall collection interval (2s) |
+| `SSE_PLATFORM_INTERVAL_MS` | `15000` | Platform snapshot refresh interval (15s) |
+| `SSE_VIVI_INTERVAL_MS` | `5000` | Vivi-AI service status interval (5s) |
+| `SSE_*_BUFFER` | `10`–`30` | Datapoints retained in ring buffers for sparklines |
 
 ---
 
@@ -201,6 +266,11 @@ Configuration values are located in [`dashboard/config.py`](dashboard/config.py)
 - `POST /api/system/processes/kill?pid={n}` — Terminate process by PID *(admin required)*
 - `GET /api/system/memory` — Get human-readable and raw memory statistics
 - `GET /api/system/logs?lines={n}` — Fetch recent system journal entries
+- `GET /api/system/platform` — Detected SoC, CPU clusters and labelled thermal zones
+- `GET /api/system/health` — Aggregate GREEN / YELLOW / RED verdict with per-check detail
+- `GET /api/system/zram` — zram devices, compressed size and compression ratio
+- `GET /api/system/pressure` — PSI `some` / `full` stall averages for cpu, memory and io
+- `GET /api/system/vivi` — Status, memory and restart count of the configured Vivi-AI units
 
 ### Device, Hardware & Management (`/api/device/*`)
 
@@ -250,11 +320,15 @@ Configuration values are located in [`dashboard/config.py`](dashboard/config.py)
 ## Project Structure
 
 ```
-lavender/
+begonia-dashboard/
 ├── dashboard/
 │   ├── main.py                  # FastAPI application, lifespan, page routes, and middleware
 │   ├── config.py                # Configuration constants, intervals, thresholds, and limits
+│   ├── branding.py              # Product name, subtitle, and upstream attribution constants
 │   ├── dependencies.py          # Command runners, session execution, and system utility helpers
+│   ├── platforms/
+│   │   ├── base.py              # Generic device tree and CPU cluster discovery
+│   │   └── begonia.py           # Redmi Note 8 Pro (MT6785) platform profile
 │   ├── auth/
 │   │   ├── __init__.py          # Auth module init
 │   │   ├── bridge.py            # Linux PAM, shadow, and sudo/doas execution engine
@@ -268,6 +342,13 @@ lavender/
 │   ├── services/
 │   │   ├── device_info.py       # Dynamic hardware model, OS, and kernel discovery
 │   │   ├── live.py              # SSE MetricCollector base, RingBuffer, and collectors
+│   │   ├── begonia_live.py      # zram, PSI, platform and Vivi-AI collectors
+│   │   ├── health.py            # Aggregate GREEN / YELLOW / RED system verdict
+│   │   ├── zram.py              # Compressed swap size, bytes and compression ratio
+│   │   ├── pressure.py          # PSI stall metrics (/proc/pressure/*)
+│   │   ├── vivi.py              # Vivi-AI systemd workload status
+│   │   ├── openclaw_scratch.py  # OpenClaw plugin-capture scratch size and hygiene
+│   │   ├── platform_live.py     # Platform snapshot for templates and the API
 │   │   ├── systemd.py           # systemctl and journalctl wrappers
 │   │   ├── storage.py           # df -h parsing, mounts, and directory usage
 │   │   ├── processes.py         # ps aux and /proc resource inspection
@@ -289,14 +370,20 @@ lavender/
 │   │   ├── power.html           # System power actions, CPU power profiles, and scheduled timers
 │   │   └── battery.html         # Battery template (redirected to Overview)
 │   └── static/
-│       ├── style.css            # Base stylesheet (Lavender theme, components, typography)
+│       ├── style.css            # Base stylesheet (upstream components, typography, layout)
 │       ├── live.css             # Live metric card styling, battery bars, network widgets
+│       ├── begonia.css          # Begonia identity: token remap, panels, badges, responsive grid
 │       ├── script.js            # Frontend utilities, modal controllers, admin elevation toggles
-│       └── live.js              # EventSource SSE client, real-time DOM updater, sparklines
+│       ├── live.js              # EventSource SSE client, real-time DOM updater, sparklines
+│       └── begonia.js           # Health, zram, PSI, CPU cluster and Vivi-AI panel renderers
+├── scripts/
+│   └── begonia-hardware-audit.sh  # Read-only /proc, /sys, lsblk, ip and systemctl audit
+├── audits/                      # Captured upstream baseline and device audit output
 ├── systemd/
-│   └── lavender.service         # systemd user service unit template
+│   └── begonia-dashboard.service  # Hardened system unit (loopback, resource limits)
 ├── requirements.txt             # Python project dependencies
 ├── CONTRIBUTING.md              # Contribution guidelines
+├── NOTICE.md                    # Derivation notice and upstream attribution
 ├── LICENSE                      # MIT License
 └── README.md                    # Project documentation
 ```
@@ -305,9 +392,83 @@ lavender/
 
 ## Limitations & Notes
 
-1. **Package Management:** Lavender features a distro-agnostic package adapter framework with support for Alpine / postmarketOS (`apk`), Debian / Ubuntu (`apt`), Arch Linux (`pacman`), and Fedora / RHEL (`dnf`). If an unsupported package manager is present, package management gracefully falls back to a disabled state.
+1. **Package Management:** Begonia Dashboard features a distro-agnostic package adapter framework with support for Alpine / postmarketOS (`apk`), Debian / Ubuntu (`apt`), Arch Linux (`pacman`), and Fedora / RHEL (`dnf`). If an unsupported package manager is present, package management gracefully falls back to a disabled state.
 2. **Kernel Sysfs Features:** Certain metrics (such as dynamic CPU frequency scaling or battery power draw) require kernel driver support in `/sys/devices/system/cpu/*/cpufreq` or `/sys/class/power_supply`. On virtual machines or devices without battery or cpufreq drivers, these cards gracefully indicate that the sensor data is unavailable.
 3. **Privileged Actions:** Modifying system services, killing processes, installing/upgrading packages, editing user groups/keys, adjusting CPU governors, and triggering power operations require administrative privileges (`wheel` or `sudo` membership) and sudo configured on the host. Root accounts (UID 0) are automatically granted permanent elevation.
+
+---
+
+## Begonia-specific additions
+
+Begonia Dashboard keeps the upstream collectors generic and adds a thin device layer on top.
+Nothing below is required for the dashboard to start on another machine: an unknown board is
+reported as `Generic Linux`.
+
+- **Platform profile** (`dashboard/platforms/`) — device tree, SoC and CPU cluster discovery driven
+  by `/proc/device-tree` and `/sys/devices/system/cpu/cpufreq/policy*`. On the Redmi Note 8 Pro the
+  kernel exposes `policy0` (6 LITTLE cores) and `policy6` (2 big cores); the big.LITTLE split is only
+  labelled when the kernel actually reports two different frequency ceilings.
+- **zram monitoring** (`dashboard/services/zram.py`) — compressed swap size, original vs. compressed
+  bytes, memory actually used and the compression ratio.
+- **PSI pressure** (`dashboard/services/pressure.py`) — `/proc/pressure/{cpu,memory,io}` `some` and
+  `full` stall averages, used as an early warning for memory and I/O pressure.
+- **Overall health verdict** (`dashboard/services/health.py`) — GREEN / YELLOW / RED combining failed
+  services, memory usage, zram swap saturation, PSI stalls, thermal readings, storage usage,
+  Vivi-AI service state and OpenClaw scratch size.
+- **Vivi-AI overview** (`dashboard/services/vivi.py`) — status, memory, restart count and uptime for
+  every unit in `dashboard/config.py::VIVI_SERVICES` (16 on begonia: `openclaw-gateway`,
+  `opencode-free-proxy`, `opencode-run-bridge`, `dbus-broker`, `opencode-web`, `vivi-fitness`, `nginx`,
+  `tailscaled`, `sshd`, `NetworkManager`, `unudhcpd`, `usb-tethering`, `begonia-dashboard`,
+  `begonia-firewall`, `display-off`, `mediatek-wifi`). A unit that does not exist reports
+  `not installed` instead of breaking the panel, so prune stale entries when a unit goes away;
+  `installed` is decided by systemd `LoadState`, not by active state.
+- **Optional units** (`dashboard/config.py::VIVI_SERVICES`) — an entry may carry
+  `"optional": true` when the unit is real but idle until someone acts on the hardware it watches
+  (`unudhcpd` and `usb-tethering` on begonia). Optional units are still reported and listed with
+  their state, but they are excluded from the `required_count` / `required_active_count` counters,
+  from the health verdict while merely inactive, and from the Vivi sparkline. A unit in state
+  `failed` still degrades the verdict regardless of the flag, and the overview shows the idle ones
+  as `<state> (optional)`.
+- **OpenClaw scratch watchdog** (`dashboard/services/openclaw_scratch.py`) — measures
+  `~/.openclaw/tmp/plugin-captures` and warns when it exceeds the configured budget or when stale
+  instance directories pile up. OpenClaw copies its whole plugin tree per run, so a coarse size
+  signal catches scratch left by a dirty shutdown without ever failing the verdict.
+- **Begonia visual identity** (`dashboard/static/begonia.css`, `dashboard/branding.py`) — a token
+  remap layer loaded after the upstream stylesheets. Removing the two `begonia.css` `<link>` tags and
+  the file restores the stock Lavender look; no upstream CSS file is modified.
+- **Read-only hardware audit** (`scripts/begonia-hardware-audit.sh`) — collects `/proc`, `/sys`,
+  `lsblk`, `findmnt`, `ip` and `systemctl` facts without changing the system. Its output is stored in
+  `audits/begonia-hardware-audit.txt`.
+
+Known hardware quirk: the MT6785 kernel used on `begonia` only exposes two thermal zones
+(`mtk-gauge` and `battery`). There is no CPU thermal zone, so the dashboard does not invent one.
+
+---
+
+## Deployment
+
+The intended deployment is a single hardened systemd unit on the device itself, bound to loopback
+and published to the tailnet with `tailscale serve`.
+
+```bash
+sudo mkdir -p /opt/begonia-dashboard && sudo chown "$USER":"$USER" /opt/begonia-dashboard
+rsync -a --delete --exclude='.git' --exclude='.venv' ~/begonia-dashboard/ /opt/begonia-dashboard/
+cd /opt/begonia-dashboard && python -m venv .venv && .venv/bin/pip install -r requirements.txt
+
+sudo install -Dm644 systemd/begonia-dashboard.service /etc/systemd/system/begonia-dashboard.service
+sudo systemctl daemon-reload && sudo systemctl enable --now begonia-dashboard.service
+
+sudo tailscale serve --bg http://127.0.0.1:8787
+```
+
+The unit listens on `127.0.0.1:8787`. Do not bind it to `0.0.0.0` and do not expose it to the
+public Internet: the dashboard performs privileged system administration.
+
+Vivi Fitness runs as a separate service on loopback `:8788`, published privately on Tailscale
+HTTPS `:10000`; the Begonia Dashboard root (`:443`) and OpenCode (`:8443`) remain unchanged. After
+Vivi Fitness is verified, set `VIVI_FITNESS_URL=https://begonia.taile971a.ts.net:10000/` in the
+Begonia Dashboard environment and restart only that service to show its optional sidebar link.
+Never enable Tailscale Funnel for either dashboard.
 
 ---
 
@@ -325,5 +486,8 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## Credits
 
-Created with ❤️ for postmarketOS on Redmi Note 7 and Linux devices by [rahat](https://github.com/minhazul73).
+Begonia Dashboard is maintained by [criollojoel10](https://github.com/criollojoel10) as a fork of
+[Lavender](https://github.com/minhazul73/lavender), created with ❤️ for postmarketOS on Redmi Note 7
+and Linux devices by [rahat](https://github.com/minhazul73).
+
 Powered by FastAPI, Uvicorn, and vanilla JavaScript.

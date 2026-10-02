@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign In — Lavender</title>
-    <meta name="description" content="Sign in to Lavender with system credentials">
+    <title>Sign In — {{ app_name }}</title>
+    <meta name="description" content="Sign in to {{ app_name }} with system credentials">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css?v={{ git_hash }}">
+    <link rel="stylesheet" href="/static/begonia.css?v={{ git_hash }}">
     <style>
         body.login-body {
             margin: 0;
@@ -68,6 +69,23 @@
             font-size: 13px;
             color: var(--text-muted, #94a3b8);
             margin: 0;
+        }
+
+        .login-identity {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--begonia-violet, #9b6cff);
+            margin: 6px 0 0;
+        }
+
+        .login-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            justify-content: center;
+            margin-top: 10px;
         }
 
         .login-alert {
@@ -176,6 +194,24 @@
             justify-content: center;
             gap: 6px;
         }
+
+        .login-credit {
+            margin-top: 12px;
+            text-align: center;
+            font-size: 11px;
+            line-height: 1.5;
+            color: var(--begonia-text-faint, #4e6f91);
+        }
+
+        .login-credit a {
+            color: var(--begonia-text-muted, #7f9dbd);
+            text-decoration: none;
+            border-bottom: 1px dotted rgba(127, 157, 189, 0.5);
+        }
+
+        .login-credit a:hover {
+            color: var(--begonia-cyan, #57d3f2);
+        }
     </style>
 </head>
 <body class="login-body">
@@ -190,8 +226,12 @@
                     <line x1="6" y1="18" x2="6.01" y2="18"/>
                 </svg>
             </div>
-            <h1 class="login-title">Lavender</h1>
-            <p class="login-subtitle">{{ device_info.model }} • System Management</p>
+            <h1 class="login-title">{{ app_short_name }}</h1>
+            <p class="login-subtitle">{{ device_info.model }}{% if device_info.soc_short %} · {{ device_info.soc_short }}{% endif %} • System Management</p>
+            <p class="login-identity">{{ app_identity }}</p>
+            <div class="login-badges">
+                {% for badge in brand_badges %}<span class="brand-badge">{{ badge }}</span>{% endfor %}
+            </div>
         </div>
 
         <div id="error-box" class="login-alert" style="display: none;">
@@ -205,7 +245,7 @@
             <div class="form-group">
                 <label class="form-label" for="username">System Username</label>
                 <div class="input-wrap">
-                    <input type="text" id="username" name="username" class="login-input" placeholder="e.g. rahat" required autofocus autocomplete="username" />
+                    <input type="text" id="username" name="username" class="login-input" placeholder="system username" required autofocus autocomplete="username" />
                 </div>
             </div>
 
@@ -225,6 +265,12 @@
         <div class="login-footer">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             <span>Authenticates directly via Linux system credentials</span>
+        </div>
+
+        <div class="login-credit">
+            Derived from
+            <a href="{{ upstream_url }}" target="_blank" rel="noopener noreferrer">{{ upstream_name }}</a>
+            by {{ upstream_author }} · MIT
         </div>
     </div>
 </div>

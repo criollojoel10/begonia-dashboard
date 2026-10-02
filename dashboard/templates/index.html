@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Overview — Lavender{% endblock %}
+{% block title %}Overview — {{ app_name }}{% endblock %}
 {% block page_title %}Live Overview{% endblock %}
 
 {% block extra_head %}
@@ -8,6 +8,102 @@
 {% endblock %}
 
 {% block content %}
+
+<!-- Begonia panel: health, zram, PSI, CPU clusters, Vivi-AI -->
+<div class="begonia-grid">
+
+    <section class="card dashboard-card begonia-panel span-3">
+        <div class="begonia-panel-head">
+            <span class="begonia-panel-title">System Health</span>
+        </div>
+        <div class="health-verdict" id="begonia-health">
+            <span class="health-verdict-dot"></span>
+            <span class="health-verdict-label" id="begonia-health-label">…</span>
+        </div>
+        <div class="health-checks" id="begonia-health-checks"></div>
+    </section>
+
+    <section class="card dashboard-card begonia-panel span-3">
+        <div class="begonia-panel-head">
+            <span class="begonia-panel-title">zram Swap</span>
+            <span class="begonia-hint" id="begonia-zram-devices">…</span>
+        </div>
+        <div class="metric-row">
+            <span class="metric-label">Compression ratio</span>
+            <span class="metric-value" id="begonia-zram-ratio">—</span>
+        </div>
+        <div class="metric-bar" id="begonia-zram-bar"><span></span></div>
+        <div class="metric-list">
+            <div class="metric-row">
+                <span class="metric-label">Swap used</span>
+                <span class="metric-value" id="begonia-zram-swap">—</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Original data</span>
+                <span class="metric-value" id="begonia-zram-original">—</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Compressed</span>
+                <span class="metric-value" id="begonia-zram-compressed">—</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Memory used</span>
+                <span class="metric-value" id="begonia-zram-memused">—</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="card dashboard-card begonia-panel span-3">
+        <div class="begonia-panel-head">
+            <span class="begonia-panel-title">PSI Pressure</span>
+            <span class="begonia-hint">avg 10 / 60 / 300s</span>
+        </div>
+        <div class="metric-bar" id="begonia-psi-bar"><span></span></div>
+        <div class="metric-list">
+            <div class="metric-row">
+                <span class="metric-label">Memory (some)</span>
+                <span class="metric-value" id="begonia-psi-memory-some">—</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Memory (full)</span>
+                <span class="metric-value" id="begonia-psi-memory-full">—</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">IO (some)</span>
+                <span class="metric-value" id="begonia-psi-io-some">—</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">IO (full)</span>
+                <span class="metric-value" id="begonia-psi-io-full">—</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">CPU (some)</span>
+                <span class="metric-value" id="begonia-psi-cpu-some">—</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="card dashboard-card begonia-panel span-3">
+        <div class="begonia-panel-head">
+            <span class="begonia-panel-title">CPU Clusters</span>
+            <span class="begonia-hint" id="begonia-clusters-count">…</span>
+        </div>
+        <div id="begonia-clusters"></div>
+    </section>
+
+    <section class="card dashboard-card begonia-panel span-12">
+        <div class="begonia-panel-head">
+            <span class="begonia-panel-title">Vivi-AI Services</span>
+            <div class="vivi-summary">
+                <span class="vivi-count" id="begonia-vivi-active">—</span>
+                <span class="vivi-count" id="begonia-vivi-installed">—</span>
+                <span class="vivi-count" id="begonia-vivi-failed">—</span>
+            </div>
+        </div>
+        <div id="begonia-vivi-list"></div>
+    </section>
+
+</div>
 
 <!-- Health status row -->
 <div class="health-row" id="health-row">
@@ -403,5 +499,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="/static/live.js"></script>
+<script src="/static/live.js?v={{ git_hash }}"></script>
+<script src="/static/begonia.js?v={{ git_hash }}"></script>
 {% endblock %}

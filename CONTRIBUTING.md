@@ -1,11 +1,14 @@
-# Contributing to Lavender
+# Contributing to Begonia Dashboard
 
 Thank you for your interest in contributing! This document outlines how to get started.
+
+Begonia Dashboard is a fork of [Lavender](https://github.com/minhazul73/lavender). Fixes that are
+not device-specific are usually best offered upstream as well.
 
 ## Getting Started
 
 1. Fork the repository
-2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/lavender.git`
+2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/begonia-dashboard.git`
 3. Create a branch: `git checkout -b feature/your-feature`
 4. Make your changes
 5. Test locally
@@ -14,11 +17,11 @@ Thank you for your interest in contributing! This document outlines how to get s
 ## Development Setup
 
 ```bash
-cd lavender
+cd begonia-dashboard
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python -m uvicorn dashboard.main:app --host 0.0.0.0 --port 8080 --reload
+python -m uvicorn dashboard.main:app --host 127.0.0.1 --port 8787 --reload
 ```
 
 ## Code Style

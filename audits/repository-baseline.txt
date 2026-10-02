@@ -1,0 +1,51 @@
+# Begonia Dashboard — upstream baseline
+
+date: 2026-09-29T14:11:45-05:00
+uname: Linux cachyos 7.2.8-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 26 Sep 2026 19:43:45 +0000 x86_64 GNU/Linux
+python: Python 3.14.7
+upstream: 8df8e03c3ac5a556f31aaff2df1ba8cd555873fd (docs: update README with expanded feature documentation, architecture details, and banner image)
+source: https://github.com/minhazul73/lavender
+
+## Files
+.gitignore
+CONTRIBUTING.md
+LICENSE
+README.md
+dashboard/api/auth.py
+dashboard/api/device.py
+dashboard/api/live.py
+dashboard/api/system.py
+dashboard/auth/__init__.py
+dashboard/auth/bridge.py
+dashboard/auth/deps.py
+dashboard/auth/session.py
+dashboard/config.py
+dashboard/dependencies.py
+dashboard/main.py
+dashboard/services/battery.py
+dashboard/services/device_info.py
+dashboard/services/live.py
+dashboard/services/network.py
+dashboard/services/packages.py
+dashboard/services/power.py
+dashboard/services/processes.py
+dashboard/services/storage.py
+dashboard/services/systemd.py
+dashboard/services/users.py
+dashboard/static/live.css
+dashboard/static/live.js
+dashboard/static/script.js
+dashboard/static/style.css
+dashboard/templates/base.html
+dashboard/templates/battery.html
+dashboard/templates/index.html
+dashboard/templates/login.html
+dashboard/templates/network.html
+dashboard/templates/packages.html
+dashboard/templates/power.html
+dashboard/templates/processes.html
+dashboard/templates/services.html
+dashboard/templates/storage.html
+dashboard/templates/users.html
+requirements.txt
+systemd/lavender.service

@@ -1,13 +1,59 @@
 """
 FastAPI dependencies for authentication and authorization.
 """
+import getpass
+import os
 from typing import Optional
 from fastapi import Request, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
 
-from dashboard.config import SESSION_COOKIE_NAME
+from dashboard.config import AUTH_ENABLED, SESSION_COOKIE_NAME
 from dashboard.auth.session import UserSession, session_store
-from dashboard.auth.bridge import verify_sudo_password
+from dashboard.auth.bridge import get_local_user_info, verify_sudo_password
+
+# Session handed to every request while AUTH_ENABLED is false. It is built once
+# per process and kept out of session_store so a logout request cannot delete it.
+AUTO_SESSION_ID = "begonia-local-session"
+_auto_session: Optional[UserSession] = None
+
+
+def get_auto_session() -> UserSession:
+    """
+    Return the always-on session used when authentication is disabled.
+
+    It carries the identity of the user the unit already runs as (the dashboard
+    executes its privileged work through that same account), so it grants no
+    privilege that the process did not already hold: it only removes the login
+    gate. Keep AUTH_ENABLED=1 for any deployment reachable outside this host's
+    own tailnet.
+    """
+    global _auto_session
+    if _auto_session is not None:
+        return _auto_session
+
+    username = getpass.getuser()
+    try:
+        info = get_local_user_info(username)
+    except Exception:
+        info = {
+            "uid": os.getuid(),
+            "gid": os.getgid(),
+            "groups": [],
+            "home": os.path.expanduser("~"),
+            "shell": "",
+        }
+
+    _auto_session = UserSession(
+        session_id=AUTO_SESSION_ID,
+        username=username,
+        uid=info.get("uid", os.getuid()),
+        gid=info.get("gid", os.getgid()),
+        home=info.get("home", ""),
+        shell=info.get("shell", ""),
+        groups=info.get("groups", []),
+        is_admin=True,
+    )
+    return _auto_session
 
 
 async def get_current_session(request: Request) -> Optional[UserSession]:
@@ -15,6 +61,11 @@ async def get_current_session(request: Request) -> Optional[UserSession]:
     Extract session from signed cookie, if valid and active.
     Attaches session to request.state for template rendering.
     """
+    if not AUTH_ENABLED:
+        session = get_auto_session()
+        request.state.session = session
+        return session
+
     # Check if already resolved in request state
     if hasattr(request.state, "session") and request.state.session is not None:
         return request.state.session

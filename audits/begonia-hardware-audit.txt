@@ -1,0 +1,721 @@
+
+=== DATE ===
+2026-09-29T14:12:53-05:00
+
+=== UNAME ===
+Linux begonia 6.16.4 #1 SMP PREEMPT Mon Sep 28 00:12:27 UTC 2026 aarch64 GNU/Linux
+
+=== OS RELEASE ===
+NAME="Arch Linux ARM"
+PRETTY_NAME="Arch Linux ARM"
+ID=archarm
+ID_LIKE=arch
+BUILD_ID=rolling
+ANSI_COLOR="38;2;23;147;209"
+HOME_URL="https://archlinuxarm.org/"
+DOCUMENTATION_URL="https://archlinuxarm.org/wiki"
+SUPPORT_URL="https://archlinuxarm.org/forum"
+BUG_REPORT_URL="https://github.com/archlinuxarm/PKGBUILDs/issues"
+LOGO=archlinux-logo
+
+=== DEVICE TREE MODEL ===
+MT6785V/CC
+
+=== DEVICE TREE COMPATIBLE ===
+xiaomi,begonia
+mediatek,mt6785
+
+=== CPUINFO ===
+processor	: 0
+BogoMIPS	: 26.00
+Features	: fp asimd aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm lrcpc dcpop asimddp
+CPU implementer	: 0x41
+CPU architecture: 8
+CPU variant	: 0x1
+CPU part	: 0xd05
+CPU revision	: 0
+
+processor	: 1
+BogoMIPS	: 26.00
+Features	: fp asimd aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm lrcpc dcpop asimddp
+CPU implementer	: 0x41
+CPU architecture: 8
+CPU variant	: 0x1
+CPU part	: 0xd05
+CPU revision	: 0
+
+processor	: 2
+BogoMIPS	: 26.00
+Features	: fp asimd aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm lrcpc dcpop asimddp
+CPU implementer	: 0x41
+CPU architecture: 8
+CPU variant	: 0x1
+CPU part	: 0xd05
+CPU revision	: 0
+
+processor	: 3
+BogoMIPS	: 26.00
+Features	: fp asimd aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm lrcpc dcpop asimddp
+CPU implementer	: 0x41
+CPU architecture: 8
+CPU variant	: 0x1
+CPU part	: 0xd05
+CPU revision	: 0
+
+processor	: 4
+BogoMIPS	: 26.00
+Features	: fp asimd aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm lrcpc dcpop asimddp
+CPU implementer	: 0x41
+CPU architecture: 8
+CPU variant	: 0x1
+CPU part	: 0xd05
+CPU revision	: 0
+
+processor	: 5
+BogoMIPS	: 26.00
+Features	: fp asimd aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm lrcpc dcpop asimddp
+CPU implementer	: 0x41
+CPU architecture: 8
+CPU variant	: 0x1
+CPU part	: 0xd05
+CPU revision	: 0
+
+processor	: 6
+BogoMIPS	: 26.00
+Features	: fp asimd aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm lrcpc dcpop asimddp
+CPU implementer	: 0x41
+CPU architecture: 8
+CPU variant	: 0x3
+CPU part	: 0xd0b
+CPU revision	: 0
+
+processor	: 7
+BogoMIPS	: 26.00
+Features	: fp asimd aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm lrcpc dcpop asimddp
+CPU implementer	: 0x41
+CPU architecture: 8
+CPU variant	: 0x3
+CPU part	: 0xd0b
+CPU revision	: 0
+
+
+=== CPU POLICIES ===
+--- /sys/devices/system/cpu/cpufreq/policy0 ---
+affected_cpus=0 1 2 3 4 5 
+related_cpus=0 1 2 3 4 5 
+scaling_driver=mtk-cpufreq 
+scaling_available_governors=ondemand userspace performance schedutil  
+scaling_governor=schedutil 
+scaling_available_frequencies=500000 774000 875000 975000 1075000 1175000 1275000 1375000 1500000 1618000 1666000 1733000 1800000 1866000 1933000 2000000  
+scaling_cur_freq=1375000 
+scaling_min_freq=500000 
+scaling_max_freq=2000000 
+cpuinfo_min_freq=500000 
+cpuinfo_max_freq=2000000 
+--- /sys/devices/system/cpu/cpufreq/policy6 ---
+affected_cpus=6 7 
+related_cpus=6 7 
+scaling_driver=mtk-cpufreq 
+scaling_available_governors=ondemand userspace performance schedutil  
+scaling_governor=schedutil 
+scaling_available_frequencies=774000 835000 919000 1002000 1085000 1169000 1308000 1419000 1530000 1670000 1733000 1796000 1860000 1923000 1986000 2050000  
+scaling_cur_freq=774000 
+scaling_min_freq=774000 
+scaling_max_freq=2050000 
+cpuinfo_min_freq=774000 
+cpuinfo_max_freq=2050000 
+
+=== MEMORY ===
+MemTotal:        5588044 kB
+MemFree:          157944 kB
+MemAvailable:    2893156 kB
+Buffers:           90336 kB
+Cached:          2835896 kB
+SwapCached:          236 kB
+Active:          2330804 kB
+Inactive:        2194384 kB
+Active(anon):     867704 kB
+Inactive(anon):   792764 kB
+Active(file):    1463100 kB
+Inactive(file):  1401620 kB
+Unevictable:           0 kB
+Mlocked:               0 kB
+SwapTotal:       2793980 kB
+SwapFree:        1328696 kB
+Dirty:               896 kB
+Writeback:            16 kB
+AnonPages:       1581216 kB
+Mapped:           165328 kB
+Shmem:             61404 kB
+KReclaimable:     297096 kB
+Slab:             429260 kB
+SReclaimable:     297096 kB
+SUnreclaim:       132164 kB
+KernelStack:        6128 kB
+ShadowCallStack:   18480 kB
+PageTables:        32508 kB
+SecPageTables:         0 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:     5588000 kB
+Committed_AS:    4108068 kB
+VmallocTotal:   135288315904 kB
+VmallocUsed:       55304 kB
+VmallocChunk:          0 kB
+Percpu:            12992 kB
+HardwareCorrupted:     0 kB
+AnonHugePages:    503808 kB
+ShmemHugePages:        0 kB
+ShmemPmdMapped:        0 kB
+FileHugePages:         0 kB
+FilePmdMapped:         0 kB
+CmaTotal:          32768 kB
+CmaFree:             140 kB
+Balloon:               0 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+Hugetlb:               0 kB
+
+=== ZRAM ===
+NAME       ALGORITHM DISKSIZE DATA  COMPR  TOTAL STREAMS MOUNTPOINT
+/dev/zram0 zstd          2.7G 1.4G 288.3M 296.9M         [SWAP]
+NAME       TYPE      SIZE USED PRIO
+/dev/zram0 partition 2.7G 1.4G  100
+
+=== PRESSURE (PSI) ===
+--- /proc/pressure/cpu ---
+some avg10=0.66 avg60=0.66 avg300=1.56 total=1596325463
+full avg10=0.00 avg60=0.00 avg300=0.00 total=0
+--- /proc/pressure/memory ---
+some avg10=0.10 avg60=0.53 avg300=0.97 total=310790989
+full avg10=0.10 avg60=0.51 avg300=0.93 total=288892165
+--- /proc/pressure/io ---
+some avg10=0.00 avg60=0.61 avg300=1.06 total=557705237
+full avg10=0.00 avg60=0.58 avg300=0.92 total=480979453
+
+=== POWER SUPPLY ===
+--- /sys/class/power_supply/battery ---
+capacity=21
+
+capacity_level=Normal
+
+charge_counter=618660
+
+charge_full=2946000
+
+charge_full_design=2946000
+
+constant_charge_voltage=4350000
+
+current_avg=-289900
+
+current_now=600
+
+cycle_count=1
+
+health=Good
+
+present=1
+
+status=Charging
+
+technology=Li-ion
+
+temp=330
+
+time_to_full_now=28901
+
+type=Battery
+
+uevent=DEVTYPE=power_supply
+POWER_SUPPLY_NAME=battery
+POWER_SUPPLY_TYPE=Battery
+POWER_SUPPLY_STATUS=Charging
+POWER_SUPPLY_HEALTH=Good
+POWER_SUPPLY_PRESENT=1
+POWER_SUPPLY_TECHNOLOGY=Li-ion
+POWER_SUPPLY_CYCLE_COUNT=1
+POWER_SUPPLY_VOLTAGE_NOW=3822000
+POWER_SUPPLY_CURRENT_NOW=1800
+POWER_SUPPLY_CURRENT_AVG=-289
+voltage_now=3822000
+
+--- /sys/class/power_supply/mt6360-chg.2.auto ---
+charge_term_current=250000
+
+charge_type=N/A
+
+constant_charge_current=500000
+
+constant_charge_current_max=5000000
+
+constant_charge_voltage=4350000
+
+constant_charge_voltage_max=4710000
+
+input_current_limit=500000
+
+input_voltage_limit=4500000
+
+online=1
+
+precharge_current=150000
+
+status=
+type=USB
+
+uevent=
+usb_type=Unknown [SDP] DCP CDP
+
+--- /sys/class/power_supply/mtk-gauge ---
+average_current_get=-2899
+
+bat_vol_get=3821
+
+battery_cic2_get=0
+
+battery_current_get=-36
+
+battery_exist_get=1
+
+battery_temperature_adc_get=656
+
+battery_voltage_cali=0
+
+bif_voltage_get=2803
+
+boot_zcv_get=0
+
+car_tune_value=0
+
+coulomb_get=8531
+
+current_max=-42
+
+current_now=3000
+
+energy_empty=0
+
+gauge_initialized=0
+
+hw_version_get=2000
+
+info_2sec_reboot=0
+
+info_bat_plug_status=1
+
+info_con0_soc=20
+
+info_con1_uisoc=0
+
+info_con1_vaild=0
+
+info_is_nvram_fail_mode=1
+
+info_monitor_plchg_status=0
+
+info_monitor_soff_validtime=0
+
+info_pl_charging_status=0
+
+info_shutdown_car=0
+
+nafg_c_dltv=0
+
+nafg_cnt_get=0
+
+nafg_dltv_get=0
+
+nafg_vbat_get=0
+
+online=0
+
+present=0
+
+ptim_battery_voltage_get=3822
+
+ptim_resist_get=0
+
+r_fg_value=50
+
+regmap_type_get=3
+
+rtc_ui_soc=21
+
+temp=330
+
+type=Unknown
+
+uevent=DEVTYPE=power_supply
+POWER_SUPPLY_NAME=mtk-gauge
+POWER_SUPPLY_TYPE=Unknown
+POWER_SUPPLY_PRESENT=0
+POWER_SUPPLY_ONLINE=0
+POWER_SUPPLY_VOLTAGE_NOW=3822000
+POWER_SUPPLY_CURRENT_MAX=-24
+POWER_SUPPLY_CURRENT_NOW=2400
+POWER_SUPPLY_ENERGY_EMPTY=0
+POWER_SUPPLY_TEMP=330
+POWER_SUPPLY_TYPE=Unknown
+
+vbat2_detect_counter=6
+
+vbat2_detect_time=5
+
+voltage_now=3822000
+
+zcv_current_get=0
+
+zcv_get=0
+
+--- /sys/class/power_supply/tcpm-source-psy-mt6360-tcpc.5.auto ---
+current_max=0
+
+current_now=0
+
+online=1
+
+type=USB
+
+uevent=DEVTYPE=power_supply
+OF_NAME=tcpc
+OF_FULLNAME=/soc/i2c@11016000/pmic@34/tcpc
+OF_COMPATIBLE_0=mediatek,mt6360-tcpc
+OF_COMPATIBLE_N=1
+POWER_SUPPLY_NAME=tcpm-source-psy-mt6360-tcpc.5.auto
+POWER_SUPPLY_TYPE=USB
+POWER_SUPPLY_ONLINE=1
+POWER_SUPPLY_VOLTAGE_MAX=5000000
+POWER_SUPPLY_VOLTAGE_MIN=5000000
+POWER
+usb_type=[C] PD PD_PPS
+
+voltage_max=5000000
+
+voltage_min=5000000
+
+voltage_now=5000000
+
+
+=== THERMAL ZONES ===
+--- /sys/class/thermal/thermal_zone0 ---
+type=mtk-gauge
+
+temp=33000
+
+mode=enabled
+policy=step_wise
+--- /sys/class/thermal/thermal_zone1 ---
+type=battery
+
+temp=33000
+
+mode=enabled
+policy=step_wise
+
+=== HWMON ===
+--- /sys/class/hwmon/hwmon0 ---
+name=mt6360_chg.2.auto
+
+uevent=OF_NAME=charger
+OF_FULLNAME=/soc/i2c@11016000/pmic@34/charger
+OF_COMPATIBLE_0=mediatek,mt6360-chg
+OF_COMPATIBLE_N=1
+
+--- /sys/class/hwmon/hwmon1 ---
+name=mtk_gauge
+
+curr1_input=-15
+
+curr1_max=0
+
+in0_input=3822
+
+temp1_input=33000
+
+temp1_label=temp
+
+uevent=OF_NAME=fuel-gauge
+OF_FULLNAME=/soc/pwrap@1000d000/pmic/fuel-gauge
+OF_COMPATIBLE_0=mediatek,mt6359-gauge
+OF_COMPATIBLE_N=1
+
+--- /sys/class/hwmon/hwmon2 ---
+name=battery
+
+curr1_average=-290
+
+curr1_input=4
+
+in0_input=3822
+
+temp1_input=33000
+
+temp1_label=temp
+
+uevent=OF_NAME=battery-manager
+OF_FULLNAME=/battery-manager
+OF_COMPATIBLE_0=mediatek,battery-manager
+OF_COMPATIBLE_N=1
+
+--- /sys/class/hwmon/hwmon3 ---
+name=tcpm_source_psy_mt6360_tcpc.5.auto
+
+curr1_input=0
+
+curr1_max=0
+
+in0_input=5000
+
+in0_max=5000
+
+in0_min=5000
+
+uevent=OF_NAME=tcpc
+OF_FULLNAME=/soc/i2c@11016000/pmic@34/tcpc
+OF_COMPATIBLE_0=mediatek,mt6360-tcpc
+OF_COMPATIBLE_N=1
+
+
+=== BLOCK DEVICES ===
+NAME        KNAME     TYPE  SIZE FSTYPE FSVER LABEL       UUID                                 MOUNTPOINTS
+sda         sda       disk    4M                                                               
+sdb         sdb       disk    4M                                                               
+sdc         sdc       disk 59.6G                                                               
+|-sdc1      sdc1      part   64M                                                               
+|-sdc2      sdc2      part    4M                                                               
+|-sdc3      sdc3      part  512K                                                               
+|-sdc4      sdc4      part   20M                                                               
+|-sdc5      sdc5      part    1M                                                               
+|-sdc6      sdc6      part    8M                                                               
+|-sdc7      sdc7      part   32M ext4   1.0               7e545690-301d-445b-a156-97cb9a3cf383 
+|-sdc8      sdc8      part   64M ext4   1.0               c6d64122-ac46-4976-a443-effaaf2c8b6a 
+|-sdc9      sdc9      part   32M ext4   1.0               2e092737-1ffc-4cd9-b470-5922224aad16 
+|-sdc10     sdc10     part 70.5M ext4   1.0               011f4a20-e980-4c29-a038-ac5b37759099 
+|-sdc11     sdc11     part    8M ext4   1.0               ac3a38b7-7308-4e89-a844-e60c897d8b12 
+|-sdc12     sdc12     part    8M ext4   1.0               ad1dffa9-a042-4f1b-ab09-60626f9e4a49 
+|-sdc13     sdc13     part    8M                                                               
+|-sdc14     sdc14     part   48M                                                               
+|-sdc15     sdc15     part    2M                                                               
+|-sdc16     sdc16     part    3M                                                               
+|-sdc17     sdc17     part  512K                                                               
+|-sdc18     sdc18     part   64M                                                               
+|-sdc19     sdc19     part  150M                                                               
+|-sdc20     sdc20     part   26M                                                               
+|-sdc21     sdc21     part    1M                                                               
+|-sdc22     sdc22     part    4M                                                               
+|-sdc23     sdc23     part    6M                                                               
+|-sdc24     sdc24     part    6M                                                               
+|-sdc25     sdc25     part    1M                                                               
+|-sdc26     sdc26     part    1M                                                               
+|-sdc27     sdc27     part   15M                                                               
+|-sdc28     sdc28     part   15M                                                               
+|-sdc29     sdc29     part   15M                                                               
+|-sdc30     sdc30     part   32M                                                               
+|-sdc31     sdc31     part   32M                                                               
+|-sdc32     sdc32     part    2M                                                               
+|-sdc33     sdc33     part    2M                                                               
+|-sdc34     sdc34     part   64M                                                               
+|-sdc35     sdc35     part   64M                                                               
+|-sdc36     sdc36     part   32M                                                               
+|-sdc37     sdc37     part    5M                                                               
+|-sdc38     sdc38     part  9.5M                                                               
+|-sdc39     sdc39     part  1.5G ext4   1.0   vendor      9766b353-a7e7-5367-bb37-b4dddcb10206 
+|-sdc40     sdc40     part  3.5G                                                               
+|-sdc41     sdc41     part  432M ext4   1.0               135ec5ee-e28e-47c0-924d-a53255b61766 
+|-sdc42     sdc42     part   16M                                                               
+|-sdc43     sdc43     part   16M                                                               
+|-sdc44     sdc44     part  128M                                                               
+|-sdc45     sdc45     part  832M ext4   1.0   cust        1acc8109-974f-4bc4-8eab-4aa5b689a1e4 
+|-sdc46     sdc46     part 52.3G ext4   1.0   kupfer_root 457cd065-a891-4723-8a25-165bd373cec5 /
+`-sdc47     sdc47     part   16M                                                               
+mmcblk0     mmcblk0   disk   29G                                                               
+`-mmcblk0p1 mmcblk0p1 part   29G vfat   FAT32             8804-1BE0                            
+zram0       zram0     disk  2.7G swap   1     zram0       3280f65d-c8b0-44e0-b7a0-9630a4aa658b [SWAP]
+
+=== FILESYSTEMS ===
+TARGET                                        SOURCE      FSTYPE      OPTIONS                                                                                   USE%  AVAIL
+/                                             /dev/sdc46  ext4        rw,relatime                                                                                30%  33.5G
+|-/proc                                       proc        proc        rw,nosuid,nodev,noexec,relatime                                                              -      0
+| `-/proc/sys/fs/binfmt_misc                  systemd-1   autofs      rw,relatime,fd=40,pgrp=1,timeout=0,minproto=5,maxproto=5,direct,pipe_ino=12046               -      0
+|   `-/proc/sys/fs/binfmt_misc                binfmt_misc binfmt_misc rw,nosuid,nodev,noexec,relatime                                                              -      0
+|-/sys                                        sys         sysfs       rw,nosuid,nodev,noexec,relatime                                                              -      0
+| |-/sys/kernel/security                      securityfs  securityfs  rw,nosuid,nodev,noexec,relatime                                                              -      0
+| |-/sys/fs/cgroup                            cgroup2     cgroup2     rw,nosuid,nodev,noexec,relatime,nsdelegate,memory_recursiveprot,memory_hugetlb_accounting    -      0
+| |-/sys/fs/pstore                            none        pstore      rw,nosuid,nodev,noexec,relatime                                                              -      0
+| |-/sys/fs/bpf                               bpf         bpf         rw,nosuid,nodev,noexec,relatime,mode=700                                                     -      0
+| |-/sys/kernel/tracing                       tracefs     tracefs     rw,nosuid,nodev,noexec,relatime                                                              -      0
+| |-/sys/kernel/debug                         debugfs     debugfs     rw,nosuid,nodev,noexec,relatime                                                              -      0
+| |-/sys/kernel/config                        configfs    configfs    rw,nosuid,nodev,noexec,relatime                                                              -      0
+| `-/sys/fs/fuse/connections                  fusectl     fusectl     rw,nosuid,nodev,noexec,relatime                                                              -      0
+|-/dev                                        dev         devtmpfs    rw,nosuid,relatime,size=2766032k,nr_inodes=691508,mode=755                                  0%   2.6G
+| |-/dev/shm                                  tmpfs       tmpfs       rw,nosuid,nodev                                                                             0%   2.7G
+| |-/dev/pts                                  devpts      devpts      rw,nosuid,noexec,relatime,gid=5,mode=600,ptmxmode=000                                        -      0
+| |-/dev/hugepages                            hugetlbfs   hugetlbfs   rw,nosuid,nodev,relatime,pagesize=2M                                                         -      0
+| `-/dev/mqueue                               mqueue      mqueue      rw,nosuid,nodev,noexec,relatime                                                              -      0
+|-/run                                        run         tmpfs       rw,nosuid,nodev,relatime,mode=755                                                           0%   2.7G
+| |-/run/credentials/systemd-journald.service none        tmpfs       ro,nosuid,nodev,noexec,relatime,nosymfollow,size=1024k,nr_inodes=1024,mode=700,noswap       0%     1M
+| |-/run/credentials/systemd-resolved.service none        tmpfs       ro,nosuid,nodev,noexec,relatime,nosymfollow,size=1024k,nr_inodes=1024,mode=700,noswap       0%     1M
+| |-/run/credentials/getty@tty1.service       none        tmpfs       ro,nosuid,nodev,noexec,relatime,nosymfollow,size=1024k,nr_inodes=1024,mode=700,noswap       0%     1M
+| `-/run/user/1000                            tmpfs       tmpfs       rw,nosuid,nodev,relatime,size=558804k,nr_inodes=139701,mode=700,uid=1000,gid=982            0% 545.6M
+`-/tmp                                        tmpfs       tmpfs       rw,nosuid,nodev,size=2794024k,nr_inodes=1048576                                             5%   2.5G
+
+=== NETWORK LINKS ===
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00 promiscuity 0 allmulti 0 minmtu 0 maxmtu 0 netns-immutable addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535 tso_max_size 524280 tso_max_segs 65535 gro_max_size 65536 gso_ipv4_max_size 65536 gro_ipv4_max_size 65536 
+    RX:  bytes packets errors dropped  missed   mcast           
+      89896958   47651      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+      89896958   47651      0       0       0       0 
+2: usb0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc pfifo_fast state DOWN mode DEFAULT group default qlen 1000
+    link/ether 7a:2e:7a:bf:8b:aa brd ff:ff:ff:ff:ff:ff promiscuity 0 allmulti 0 minmtu 14 maxmtu 15412 addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535 tso_max_size 65536 tso_max_segs 65535 gro_max_size 65536 gso_ipv4_max_size 65536 gro_ipv4_max_size 65536 parentbus gadget parentdev gadget.0 
+    RX:  bytes packets errors dropped  missed   mcast           
+             0       0      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+             0       0      0     389       0       0 
+3: tailscale0: <POINTOPOINT,MULTICAST,NOARP,UP,LOWER_UP> mtu 1280 qdisc pfifo_fast state UNKNOWN mode DEFAULT group default qlen 500
+    link/none  promiscuity 0 allmulti 0 minmtu 68 maxmtu 65535 
+    tun type tun pi off vnet_hdr on persist off addrgenmode random numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535 tso_max_size 65536 tso_max_segs 65535 gro_max_size 65536 gso_ipv4_max_size 65536 gro_ipv4_max_size 65536 
+    RX:  bytes packets errors dropped  missed   mcast           
+       2090361   15097      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+       3247468   23062      0       0       0       0 
+4: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP mode DORMANT group default qlen 3000
+    link/ether 00:08:22:a8:9d:fb brd ff:ff:ff:ff:ff:ff promiscuity 0 allmulti 0 minmtu 68 maxmtu 1500 netns-immutable addrgenmode none numtxqueues 4 numrxqueues 4 gso_max_size 65536 gso_max_segs 65535 tso_max_size 65536 tso_max_segs 65535 gro_max_size 65536 gso_ipv4_max_size 65536 gro_ipv4_max_size 65536 parentbus platform parentdev 18000000.wifi 
+    RX:  bytes packets errors dropped  missed   mcast           
+     321273526  580627      0      11       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     216462803  514541      0      73       0       0 
+    altname wlx000822a89dfb
+5: wlan1: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc mq state DOWN mode DORMANT group default qlen 3000
+    link/ether 00:08:22:aa:9d:fb brd ff:ff:ff:ff:ff:ff promiscuity 0 allmulti 0 minmtu 68 maxmtu 1500 netns-immutable addrgenmode none numtxqueues 4 numrxqueues 4 gso_max_size 65536 gso_max_segs 65535 tso_max_size 65536 tso_max_segs 65535 gro_max_size 65536 gso_ipv4_max_size 65536 gro_ipv4_max_size 65536 parentbus platform parentdev 18000000.wifi 
+    RX:  bytes packets errors dropped  missed   mcast           
+             0       0      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+             0       0      0       0       0       0 
+    altname wlx000822aa9dfb
+6: p2p0: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+    link/ether 02:08:22:a8:9d:fb brd ff:ff:ff:ff:ff:ff promiscuity 0 allmulti 0 minmtu 68 maxmtu 1500 netns-immutable addrgenmode eui64 numtxqueues 4 numrxqueues 4 gso_max_size 65536 gso_max_segs 65535 tso_max_size 65536 tso_max_segs 65535 gro_max_size 65536 gso_ipv4_max_size 65536 gro_ipv4_max_size 65536 
+    RX:  bytes packets errors dropped  missed   mcast           
+             0       0      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+             0       0      0       0       0       0 
+    altname wlx020822a89dfb
+7: ap0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc mq state DOWN mode DORMANT group default qlen 1000
+    link/ether 06:08:22:a8:9d:fb brd ff:ff:ff:ff:ff:ff promiscuity 0 allmulti 0 minmtu 68 maxmtu 1500 netns-immutable addrgenmode none numtxqueues 4 numrxqueues 4 gso_max_size 65536 gso_max_segs 65535 tso_max_size 65536 tso_max_segs 65535 gro_max_size 65536 gso_ipv4_max_size 65536 gro_ipv4_max_size 65536 
+    RX:  bytes packets errors dropped  missed   mcast           
+             0       0      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+             0       0      0       0       0       0 
+    altname wlx060822a89dfb
+
+=== ADDRESSES ===
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host noprefixroute 
+       valid_lft forever preferred_lft forever
+2: usb0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc pfifo_fast state DOWN group default qlen 1000
+    link/ether 7a:2e:7a:bf:8b:aa brd ff:ff:ff:ff:ff:ff
+    inet 172.16.42.1/24 scope global usb0
+       valid_lft forever preferred_lft forever
+3: tailscale0: <POINTOPOINT,MULTICAST,NOARP,UP,LOWER_UP> mtu 1280 qdisc pfifo_fast state UNKNOWN group default qlen 500
+    link/none 
+    inet 100.112.2.11/32 scope global tailscale0
+       valid_lft forever preferred_lft forever
+    inet6 fd7a:115c:a1e0::9734:20c/128 scope global 
+       valid_lft forever preferred_lft forever
+    inet6 fe80::8481:f5f5:5409:54cc/64 scope link stable-privacy proto kernel_ll 
+       valid_lft forever preferred_lft forever
+4: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 3000
+    link/ether 00:08:22:a8:9d:fb brd ff:ff:ff:ff:ff:ff
+    altname wlx000822a89dfb
+    inet 192.168.1.174/24 brd 192.168.1.255 scope global dynamic noprefixroute wlan0
+       valid_lft 4947sec preferred_lft 4947sec
+    inet6 fe80::51c0:f3f0:7aff:9233/64 scope link noprefixroute 
+       valid_lft forever preferred_lft forever
+5: wlan1: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc mq state DOWN group default qlen 3000
+    link/ether 00:08:22:aa:9d:fb brd ff:ff:ff:ff:ff:ff
+    altname wlx000822aa9dfb
+6: p2p0: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN group default qlen 1000
+    link/ether 02:08:22:a8:9d:fb brd ff:ff:ff:ff:ff:ff
+    altname wlx020822a89dfb
+7: ap0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc mq state DOWN group default qlen 1000
+    link/ether 06:08:22:a8:9d:fb brd ff:ff:ff:ff:ff:ff
+    altname wlx060822a89dfb
+
+=== ROUTES ===
+default via 192.168.1.1 dev wlan0 proto dhcp src 192.168.1.174 metric 600 
+172.16.42.0/24 dev usb0 proto kernel scope link src 172.16.42.1 linkdown 
+192.168.1.0/24 dev wlan0 proto kernel scope link src 192.168.1.174 metric 600 
+fd7a:115c:a1e0::9734:20c dev tailscale0 proto kernel metric 256 pref medium
+fe80::/64 dev tailscale0 proto kernel metric 256 pref medium
+fe80::/64 dev wlan0 proto kernel metric 1024 pref medium
+
+=== SYSTEMD FAILED ===
+  UNIT                    LOAD   ACTIVE SUB    DESCRIPTION
+● systemd-suspend.service loaded failed failed System Suspend
+
+Legend: LOAD   → Reflects whether the unit definition was properly loaded.
+        ACTIVE → The high-level unit activation state, i.e. generalization of SUB.
+        SUB    → The low-level unit activation state, values depend on unit type.
+
+1 loaded units listed.
+
+=== USER SYSTEMD FAILED ===
+  UNIT LOAD ACTIVE SUB DESCRIPTION
+
+0 loaded units listed.
+
+=== RUNNING SERVICES ===
+  UNIT                      LOAD   ACTIVE SUB     DESCRIPTION
+  dbus-broker.service       loaded active running D-Bus System Message Bus
+  getty@tty1.service        loaded active running Getty on tty1
+  iio-sensor-proxy.service  loaded active running IIO Sensor Proxy service
+  NetworkManager.service    loaded active running Network Manager
+  opencode-web.service      loaded active running OpenCode V2 server (begonia, loopback :4096)
+  polkit.service            loaded active running Authorization Manager
+  sshd.service              loaded active running OpenSSH Daemon
+  systemd-journald.service  loaded active running Journal Service
+  systemd-logind.service    loaded active running User Login Management
+  systemd-resolved.service  loaded active running Network Name Resolution
+  systemd-timesyncd.service loaded active running Network Time Synchronization
+  systemd-udevd.service     loaded active running Rule-based Manager for Device Events and Files
+  systemd-userdbd.service   loaded active running User Database Manager
+  tailscaled.service        loaded active running Tailscale node agent
+  udisks2.service           loaded active running Disk Manager
+  unudhcpd.service          loaded active running Run dhcp server on specified interface
+  upower.service            loaded active running Daemon for power management
+  user@1000.service         loaded active running User Manager for UID 1000
+  wpa_supplicant.service    loaded active running WPA supplicant
+
+Legend: LOAD   → Reflects whether the unit definition was properly loaded.
+        ACTIVE → The high-level unit activation state, i.e. generalization of SUB.
+        SUB    → The low-level unit activation state, values depend on unit type.
+
+19 loaded units listed.
+
+=== USER SERVICES (joel) ===
+  UNIT                                             LOAD   ACTIVE SUB     DESCRIPTION
+  dbus-:1.19-org.a11y.atspi.Registry@0.service     loaded active running dbus-:1.19-org.a11y.atspi.Registry@0.service
+  dbus-:1.2-org.mobian_project.CallAudio@0.service loaded active running dbus-:1.2-org.mobian_project.CallAudio@0.service
+  dbus-:1.2-org.sigxcpu.Feedback@0.service         loaded active running dbus-:1.2-org.sigxcpu.Feedback@0.service
+  dbus-broker.service                              loaded active running D-Bus User Message Bus
+  dconf.service                                    loaded active running User preferences database
+  openclaw-gateway.service                         loaded active running OpenClaw Gateway
+  opencode-free-proxy.service                      loaded active running OpenCode free models proxy (OpenAI-compatible, loopback :6446)
+  opencode-run-bridge.service                      loaded active running OpenCode run-mode bridge (free models via account)
+  pipewire-pulse.service                           loaded active running PipeWire PulseAudio
+  pipewire.service                                 loaded active running PipeWire Multimedia Service
+  wireplumber.service                              loaded active running Multimedia Service Session Manager
+
+Legend: LOAD   → Reflects whether the unit definition was properly loaded.
+        ACTIVE → The high-level unit activation state, i.e. generalization of SUB.
+        SUB    → The low-level unit activation state, values depend on unit type.
+
+11 loaded units listed.

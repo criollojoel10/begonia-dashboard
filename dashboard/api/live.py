@@ -19,7 +19,8 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-ALLOWED_METRICS = ("cpu", "ram", "thermal", "battery", "network")
+ALLOWED_METRICS = ("cpu", "ram", "thermal", "battery", "network",
+                   "zram", "pressure", "platform", "vivi")
 
 
 async def sse_generator(metrics: list[str] | None):
@@ -41,6 +42,10 @@ async def sse_generator(metrics: list[str] | None):
         "thermal": monitor.get_thermal,
         "battery": monitor.get_battery,
         "network": monitor.get_network,
+        "zram": monitor.get_zram,
+        "pressure": monitor.get_pressure,
+        "platform": monitor.get_platform,
+        "vivi": monitor.get_vivi,
     }
 
     # Start background collectors on first SSE client

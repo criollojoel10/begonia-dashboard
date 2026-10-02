@@ -1,5 +1,5 @@
 """
-Network and WiFi management for Lavender dashboard.
+Network and WiFi management for Begonia Dashboard.
 Supports postmarketOS (Alpine / busybox / wpa_cli), Debian/Ubuntu (nmcli / iwconfig / iw),
 and standard Linux kernel sysfs / procfs.
 """
