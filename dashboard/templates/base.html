@@ -136,7 +136,24 @@
                     <span id="sse-status-text">Connecting…</span>
                 </span>
                 {% endif %}
+                {% if not auth_enabled %}
+                {# No login gate: the request already runs as the unit user, so there
+                   is no identity to switch and no password to ask for. Show the
+                   account actions run as, with no credential controls. #}
                 {% if session %}
+                <div class="user-chip" id="user-chip">
+                    <div class="user-avatar" title="Actions run as {{ session.username }}">
+                        {{ session.username[0].upper() }}
+                    </div>
+                    <span class="user-name">{{ session.username }}</span>
+                    {% if session.is_elevated() %}
+                    <span class="badge badge-admin" id="admin-badge" title="Administrative privileges active">
+                        <span class="admin-pulse"></span> Admin
+                    </span>
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% elif session %}
                 <div class="user-chip" id="user-chip">
                     <div class="user-avatar" title="Logged in as {{ session.username }}">
                         {{ session.username[0].upper() }}
@@ -188,6 +205,7 @@
     </div>
 </div>
 
+{% if auth_enabled %}
 <!-- Administrative Access Elevation Modal -->
 <div id="elevate-modal" class="modal" style="display:none;">
     <div class="modal-backdrop" onclick="closeElevateModal()"></div>
@@ -214,6 +232,7 @@
         </form>
     </div>
 </div>
+{% endif %}
 
 <script src="/static/script.js?v={{ git_hash }}"></script>
 {% block extra_js %}{% endblock %}

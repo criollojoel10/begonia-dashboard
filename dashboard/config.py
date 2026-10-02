@@ -155,15 +155,38 @@ OPENCLAW_SCRATCH_INSTANCE_WARN = _env_int("BEGONIA_OPENCLAW_SCRATCH_INSTANCES", 
 
 # ===== Vivi-AI workloads surfaced in the dashboard =====
 # Missing units are reported as "not installed" instead of failing the panel.
+# Keep this list in sync with the units that really run on begonia
+# (systemctl list-units / systemctl --user list-units); a stale entry shows up
+# as a permanent "not installed" row. See docs/08-begonia-dashboard.md.
 VIVI_SERVICES = [
+    # user manager (joel)
     {"unit": "openclaw-gateway.service", "scope": "user", "label": "OpenClaw Gateway"},
-    {"unit": "openclaw.service", "scope": "user", "label": "OpenClaw"},
+    {"unit": "opencode-free-proxy.service", "scope": "user", "label": "OpenCode Free Proxy"},
+    {"unit": "opencode-run-bridge.service", "scope": "user", "label": "OpenCode Run Bridge"},
+    {"unit": "dbus-broker.service", "scope": "user", "label": "User D-Bus"},
+    # system manager
     {"unit": "opencode-web.service", "scope": "system", "label": "OpenCode Server"},
+    {"unit": "vivi-fitness.service", "scope": "system", "label": "Vivi Fitness"},
+    {"unit": "nginx.service", "scope": "system", "label": "Nginx"},
     {"unit": "tailscaled.service", "scope": "system", "label": "Tailscale"},
     {"unit": "sshd.service", "scope": "system", "label": "SSH"},
+    {"unit": "NetworkManager.service", "scope": "system", "label": "Network"},
+    {"unit": "unudhcpd.service", "scope": "system", "label": "USB Tethering DHCP"},
+    {"unit": "usb-tethering.service", "scope": "system", "label": "USB Tethering"},
+    {"unit": "begonia-dashboard.service", "scope": "system", "label": "Dashboard"},
+    {"unit": "begonia-firewall.service", "scope": "system", "label": "Firewall (nftables)"},
+    {"unit": "display-off.service", "scope": "system", "label": "Backlight Off (headless)"},
+    {"unit": "mediatek-wifi.service", "scope": "system", "label": "Wi-Fi (mediatek)"},
 ]
 
 # ===== Auth & Session Settings =====
+# The UI binds to loopback and is published with `tailscale serve` (tailnet
+# only), so on begonia the login gate is off by default: every request is served
+# as a local, already elevated session for the unit user (see
+# dashboard.auth.deps.get_auto_session). Set BEGONIA_AUTH=1 through
+# /etc/begonia-dashboard.env or a systemd drop-in to restore the PAM login flow
+# without touching code.
+AUTH_ENABLED = _env_flag("BEGONIA_AUTH", "DASHBOARD_AUTH", default=False)
 SESSION_COOKIE_NAME = "begonia_session"
 SESSION_MAX_IDLE_MINUTES = _env_int("BEGONIA_SESSION_MAX_IDLE_MINUTES", default=60)
 ADMIN_ELEVATION_TIMEOUT_MINUTES = _env_int("BEGONIA_ELEVATION_TIMEOUT_MINUTES", default=15)

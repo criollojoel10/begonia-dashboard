@@ -121,11 +121,46 @@ Open `http://127.0.0.1:8787` on the device itself, or the `tailscale serve` URL 
 your tailnet. The default bind address is loopback on purpose: the dashboard performs privileged
 system administration.
 - The **Overview** page (`/`) is publicly viewable without authentication for quick device telemetry.
-- Protected pages and administrative actions require signing in with your Linux system credentials.
+- Every other page (`/services`, `/processes`, `/storage`, `/network`, `/packages`, `/users`,
+  `/power`) needs a session. Whether that means a login form or an automatic local session
+  depends on `AUTH_ENABLED` (see below).
 
 ---
 
 ## Authentication & Security
+
+### Auth gate off by default (`AUTH_ENABLED=false`)
+
+The default is no login form. `dashboard/config.py` reads `AUTH_ENABLED` from `BEGONIA_AUTH` /
+`DASHBOARD_AUTH`, defaulting to **false**, and `dashboard/auth/deps.py::get_auto_session` hands
+every request a single cached `UserSession` for the account the unit already runs as, with
+`is_admin=True`. That account is `joel` in the begonia deployment.
+
+The auto-session grants no privilege the process did not already hold: the unit runs as `joel`,
+`sudo` is `NOPASSWD` for it, and the dashboard only binds `127.0.0.1`. What the gate removes is
+the password prompt, not a boundary that the process was respecting before. It is only safe
+because `tailscale serve` is the single publication path and Tailscale is the access boundary.
+
+With the gate off:
+
+- `GET /login` redirects to the requested page instead of rendering a form.
+- `POST /auth/login` answers `{"success": true, "auth_enabled": false}` without touching PAM.
+- `POST /auth/elevate` and `/auth/drop-admin` are no-ops that keep the session elevated, so admin
+  actions do not start answering 403.
+- `templates/base.html` hides sign in/out and the elevation modal, showing a read-only chip with
+  the username instead.
+
+Restore the PAM login flow without editing code:
+
+```bash
+# /etc/begonia-dashboard.env  (mode 0600)
+BEGONIA_AUTH=1
+```
+
+or a drop-in in `/etc/systemd/system/begonia-dashboard.service.d/`, then restart the unit. Set
+`BEGONIA_AUTH=1` before publishing the dashboard anywhere outside its own tailnet.
+
+### Login flow when the gate is on
 
 Begonia Dashboard authenticates directly against your host Linux operating system:
 
@@ -171,6 +206,7 @@ Configuration values are located in [`dashboard/config.py`](dashboard/config.py)
 ### Auth & Session Settings
 | Variable | Default | Description |
 | :--- | :--- | :--- |
+| `AUTH_ENABLED` | `False` | Enable the PAM login gate (env `BEGONIA_AUTH` / `DASHBOARD_AUTH`); off means every request runs as a local auto-session |
 | `SESSION_COOKIE_NAME` | `"begonia_session"` | Session cookie name |
 | `SESSION_MAX_IDLE_MINUTES` | `60` | Inactivity timeout before session expires (env `BEGONIA_SESSION_MAX_IDLE_MINUTES`) |
 | `ADMIN_ELEVATION_TIMEOUT_MINUTES` | `15` | Administrative elevation duration (env `BEGONIA_ELEVATION_TIMEOUT_MINUTES`) |
@@ -380,7 +416,12 @@ reported as `Generic Linux`.
   services, memory usage, zram swap saturation, PSI stalls, thermal readings, storage usage,
   Vivi-AI service state and OpenClaw scratch size.
 - **Vivi-AI overview** (`dashboard/services/vivi.py`) — status, memory, restart count and uptime for
-  the configured `openclaw-gateway`, `openclaw`, `opencode-web`, `tailscaled` and `sshd` units.
+  every unit in `dashboard/config.py::VIVI_SERVICES` (16 on begonia: `openclaw-gateway`,
+  `opencode-free-proxy`, `opencode-run-bridge`, `dbus-broker`, `opencode-web`, `vivi-fitness`, `nginx`,
+  `tailscaled`, `sshd`, `NetworkManager`, `unudhcpd`, `usb-tethering`, `begonia-dashboard`,
+  `begonia-firewall`, `display-off`, `mediatek-wifi`). A unit that does not exist reports
+  `not installed` instead of breaking the panel, so prune stale entries when a unit goes away;
+  `installed` is decided by systemd `LoadState`, not by active state.
 - **OpenClaw scratch watchdog** (`dashboard/services/openclaw_scratch.py`) — measures
   `~/.openclaw/tmp/plugin-captures` and warns when it exceeds the configured budget or when stale
   instance directories pile up. OpenClaw copies its whole plugin tree per run, so a coarse size
