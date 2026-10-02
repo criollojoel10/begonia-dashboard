@@ -159,13 +159,17 @@ OPENCLAW_SCRATCH_INSTANCE_WARN = _env_int("BEGONIA_OPENCLAW_SCRATCH_INSTANCES", 
 # (systemctl list-units / systemctl --user list-units); a stale entry shows up
 # as a permanent "not installed" row. See docs/08-begonia-dashboard.md.
 #
-# Coverage: every unit enabled on begonia is listed here, so nothing enabled
-# hides from the watchlist. The complete systemd inventory (installed or not,
-# 129 units) is always available on the /services page regardless.
-# Deliberately excluded, all of them plumbing with nothing to act on:
-# getty@.service (console login template), systemd-tmpfiles-reset and other
-# boot-time oneshots, and the user-session units wireplumber / xdg-user-dirs
-# (desktop plumbing, inactive; the user bus itself is watched via dbus-broker).
+# Coverage: every enabled unit that does something is listed here, so nothing
+# the operator enabled hides from the watchlist. The complete systemd inventory
+# (installed or not, 129 units) is always available on the /services page
+# regardless. Deliberately excluded, all of them plumbing with nothing to act
+# on: getty@.service (console login template) and remote-fs.target; the
+# activation sockets systemd-resolved-{monitor,varlink}.socket,
+# systemd-userdbd.socket, p11-kit-server.socket and pipewire{,-pulse}.socket,
+# whose daemons are watched directly; the boot-time and cadence oneshots
+# (systemd-tmpfiles-*, fstrim, paccache, shadow); and the user-session units
+# wireplumber / xdg-user-dirs (desktop plumbing, inactive; the user bus itself
+# is watched via dbus-broker).
 #
 # "optional": true marks a unit that is installed and reported but idle in
 # normal operation, because it only matters when someone acts (tethering a
@@ -179,6 +183,15 @@ VIVI_SERVICES = [
     {"unit": "opencode-free-proxy.service", "scope": "user", "label": "OpenCode Free Proxy"},
     {"unit": "opencode-run-bridge.service", "scope": "user", "label": "OpenCode Run Bridge"},
     {"unit": "dbus-broker.service", "scope": "user", "label": "User D-Bus"},
+    # OpenClaw's own automation. Both timers are enabled, so both run while the
+    # panel said nothing about them: the gateway's NRestarts count grew with no
+    # visible cause, and the leak-watch samples had nowhere to be seen. The
+    # timer stays active between runs and the service is active only while it
+    # executes, so both are listed; the service rows idle most of the time.
+    {"unit": "openclaw-mem-sample.timer", "scope": "user", "label": "Mem Sample Timer (15 min)", "optional": True},
+    {"unit": "openclaw-mem-sample.service", "scope": "user", "label": "Mem Sample", "optional": True},
+    {"unit": "openclaw-gateway-restart.timer", "scope": "user", "label": "Gateway Restart Timer (nightly)", "optional": True},
+    {"unit": "openclaw-gateway-restart.service", "scope": "user", "label": "Gateway Restart", "optional": True},
     # system manager
     {"unit": "opencode-web.service", "scope": "system", "label": "OpenCode Server"},
     {"unit": "vivi-fitness.service", "scope": "system", "label": "Vivi Fitness"},
