@@ -153,16 +153,26 @@ OPENCLAW_SCRATCH_WARN_BYTES = _env_int(
 )
 OPENCLAW_SCRATCH_INSTANCE_WARN = _env_int("BEGONIA_OPENCLAW_SCRATCH_INSTANCES", default=2)
 
-# ===== Vivi-AI workloads surfaced in the dashboard =====
+# ===== Host watchlist surfaced in the dashboard =====
 # Missing units are reported as "not installed" instead of failing the panel.
 # Keep this list in sync with the units that really run on begonia
 # (systemctl list-units / systemctl --user list-units); a stale entry shows up
 # as a permanent "not installed" row. See docs/08-begonia-dashboard.md.
 #
+# Coverage: every unit enabled on begonia is listed here, so nothing enabled
+# hides from the watchlist. The complete systemd inventory (installed or not,
+# 129 units) is always available on the /services page regardless.
+# Deliberately excluded, all of them plumbing with nothing to act on:
+# getty@.service (console login template), systemd-tmpfiles-reset and other
+# boot-time oneshots, and the user-session units wireplumber / xdg-user-dirs
+# (desktop plumbing, inactive; the user bus itself is watched via dbus-broker).
+#
 # "optional": true marks a unit that is installed and reported but idle in
 # normal operation, because it only matters when someone acts (tethering a
-# phone, plugging a cable). Optional units never degrade the health verdict
-# while they are merely inactive; a unit in state "failed" still does.
+# phone, plugging a cable) or because the kernel makes it a permanent skip
+# (haveged: ConditionKernelVersion=<5.6 is unmet on this 6.16 kernel).
+# Optional units never degrade the health verdict while they are merely
+# inactive; a unit in state "failed" still does.
 VIVI_SERVICES = [
     # user manager (joel)
     {"unit": "openclaw-gateway.service", "scope": "user", "label": "OpenClaw Gateway"},
@@ -176,12 +186,17 @@ VIVI_SERVICES = [
     {"unit": "tailscaled.service", "scope": "system", "label": "Tailscale"},
     {"unit": "sshd.service", "scope": "system", "label": "SSH"},
     {"unit": "NetworkManager.service", "scope": "system", "label": "Network"},
+    {"unit": "NetworkManager-wait-online.service", "scope": "system", "label": "Network Wait Online"},
+    {"unit": "NetworkManager-dispatcher.service", "scope": "system", "label": "Network Dispatcher", "optional": True},
+    {"unit": "systemd-resolved.service", "scope": "system", "label": "DNS Resolver"},
+    {"unit": "systemd-timesyncd.service", "scope": "system", "label": "Time Sync"},
     {"unit": "unudhcpd.service", "scope": "system", "label": "USB Tethering DHCP", "optional": True},
     {"unit": "usb-tethering.service", "scope": "system", "label": "USB Tethering", "optional": True},
     {"unit": "begonia-dashboard.service", "scope": "system", "label": "Dashboard"},
     {"unit": "begonia-firewall.service", "scope": "system", "label": "Firewall (nftables)"},
     {"unit": "display-off.service", "scope": "system", "label": "Backlight Off (headless)"},
     {"unit": "mediatek-wifi.service", "scope": "system", "label": "Wi-Fi (mediatek)"},
+    {"unit": "haveged.service", "scope": "system", "label": "Entropy (haveged, legacy)", "optional": True},
 ]
 
 # ===== Auth & Session Settings =====
