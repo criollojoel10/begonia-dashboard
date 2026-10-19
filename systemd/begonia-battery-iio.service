@@ -1,0 +1,9 @@
+[Unit]
+Description=begonia: telemetria de bateria desde el ADC del MT6359
+Documentation=https://github.com/criollojoel10/begonia-dashboard
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/begonia-battery-iio --quiet
+NoNewPrivileges=yes
+PrivateTmp=yes

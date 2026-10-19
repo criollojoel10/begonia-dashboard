@@ -1,0 +1,189 @@
+#!/usr/bin/env python3
+"""begonia-battery-iio — batería de begonia desde el ADC del MT6359.
+
+El kernel mainline de begonia (6.16/7.1) no tiene fuel gauge: no existe
+/sys/class/power_supply/battery ni /sys/class/power_supply/mtk-gauge. El PMIC
+MT6359 sí publica VBAT/IBAT por IIO:
+
+    in_voltage12_raw  (batt_v)  -> mV = raw / 12
+    in_current13_raw  (batt_i)  -> mA = signed16(raw)   (+ carga, - descarga)
+
+La escala de tensión está calibrada contra el carril CV del MT6360 (4,35 V):
+raw 52.100 -> 4,34 V. La corriente es aproximada (LSB 1 mA) y se contrasta con
+carga conocida; no se usa para decisiones de carga.
+
+Escribe /run/begonia-battery.json (0644, atómico). Consumidores:
+  - dashboard: dashboard/services/live.py (_collect_iio)
+  - automatización OpenClaw: battery-low-alert-begonia
+
+Uso: begonia-battery-iio [--json|--human] [--quiet]
+"""
+
+from __future__ import annotations
+
+import glob
+import json
+import os
+import sys
+import tempfile
+from datetime import datetime
+
+IIO_GLOB = "/sys/bus/iio/devices/iio:device*"
+CHG_GLOB = "/sys/class/power_supply/mt6360-chg.*.auto"
+OUT = "/run/begonia-battery.json"
+
+# Curva Li-ion de descarga (4,35 V max). Solo se usa cuando ac_online=0.
+SOC_CURVE = [
+    (4350, 100), (4300, 97), (4250, 93), (4200, 89), (4150, 84),
+    (4100, 79), (4050, 73), (4000, 67), (3950, 60), (3900, 53),
+    (3850, 46), (3800, 39), (3750, 31), (3700, 23), (3650, 16),
+    (3600, 10), (3550, 5), (3500, 2), (3450, 0),
+]
+
+
+def read(path: str) -> str | None:
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            return fh.read().strip()
+    except OSError:
+        return None
+
+
+def read_int(path: str) -> int | None:
+    raw = read(path)
+    if raw is None or raw == "":
+        return None
+    try:
+        return int(raw)
+    except ValueError:
+        return None
+
+
+def find_iio() -> str | None:
+    for dev in sorted(glob.glob(IIO_GLOB)):
+        if read(os.path.join(dev, "name")) == "MT6359":
+            return dev
+    return None
+
+
+def find_charger() -> str | None:
+    matches = sorted(glob.glob(CHG_GLOB))
+    return matches[0] if matches else None
+
+
+def signed16(value: int) -> int:
+    return value - 65536 if value > 32767 else value
+
+
+def soc_from_mv(mv: float) -> int:
+    """Interpolación lineal sobre SOC_CURVE; solo válida descargando."""
+    if mv >= SOC_CURVE[0][0]:
+        return 100
+    if mv <= SOC_CURVE[-1][0]:
+        return 0
+    for (hi_mv, hi_pct), (lo_mv, lo_pct) in zip(SOC_CURVE, SOC_CURVE[1:]):
+        if lo_mv <= mv <= hi_mv:
+            span = hi_mv - lo_mv
+            frac = (mv - lo_mv) / span if span else 0.0
+            return int(round(lo_pct + frac * (hi_pct - lo_pct)))
+    return 0
+
+
+def collect() -> dict:
+    now = datetime.now().astimezone()
+    iio = find_iio()
+    chg = find_charger()
+
+    if iio is None:
+        raise RuntimeError("no se encontró el IIO MT6359")
+
+    v_raw = read_int(os.path.join(iio, "in_voltage12_raw"))
+    i_raw = read_int(os.path.join(iio, "in_current13_raw"))
+    if v_raw is None:
+        raise RuntimeError("in_voltage12_raw no legible")
+
+    voltage_mv = v_raw / 12.0
+    if not 2500 <= voltage_mv <= 5000:
+        raise RuntimeError(f"tensión fuera de rango: {voltage_mv:.0f} mV (raw={v_raw})")
+
+    online = None
+    status = None
+    cc_uV = ic_uA = ccc_uA = None
+    if chg:
+        online = read_int(os.path.join(chg, "online"))
+        status = read(os.path.join(chg, "status"))
+        cc_uV = read_int(os.path.join(chg, "constant_charge_voltage"))
+        ic_uA = read_int(os.path.join(chg, "input_current_limit"))
+        ccc_uA = read_int(os.path.join(chg, "constant_charge_current"))
+
+    ac = bool(online == 1) if online is not None else None
+    state = "charging" if ac else ("discharging" if ac is False else "unknown")
+    pct = None
+    if ac is False:
+        pct = soc_from_mv(voltage_mv)
+
+    current_ma = signed16(i_raw) if i_raw is not None else None
+
+    return {
+        "ts": now.isoformat(timespec="seconds"),
+        "source": "mt6359-auxadc",
+        "iio": os.path.basename(iio),
+        "charger": os.path.basename(chg) if chg else None,
+        "voltage_mV": int(round(voltage_mv)),
+        "voltage_V": round(voltage_mv / 1000.0, 3),
+        "current_mA": current_ma,
+        "current_raw": i_raw,
+        "ac_online": ac,
+        "charger_status": status,
+        "state": state,
+        "capacity_pct": pct,
+        "capacity_note": "estimado por tensión; null con cargador (CV fija 4,35 V)",
+        "charge_voltage_uV": cc_uV,
+        "input_current_limit_uA": ic_uA,
+        "constant_charge_current_uA": ccc_uA,
+    }
+
+
+def write_json(data: dict) -> None:
+    fd, tmp = tempfile.mkstemp(prefix=".begonia-battery.", dir="/run")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            json.dump(data, fh, ensure_ascii=False)
+            fh.write("\n")
+        os.chmod(tmp, 0o644)
+        os.replace(tmp, OUT)
+    finally:
+        if os.path.exists(tmp):
+            os.unlink(tmp)
+
+
+def main() -> int:
+    human = "--human" in sys.argv[1:]
+    quiet = "--quiet" in sys.argv[1:]
+    try:
+        data = collect()
+    except Exception as exc:  # noqa: BLE001 - CLI: reportar y salir
+        if not quiet:
+            print(f"begonia-battery-iio: {exc}", file=sys.stderr)
+        return 1
+
+    try:
+        write_json(data)
+    except PermissionError:
+        # Ejecución manual como usuario sin permiso en /run: no es fatal,
+        # el timer (root) mantiene el JSON para dashboard y automatización.
+        if not quiet:
+            print("aviso: sin permiso para escribir /run; solo stdout", file=sys.stderr)
+    if human:
+        level = f"{data['capacity_pct']}%" if data["capacity_pct"] is not None else "n/a"
+        print(
+            f"{data['state']}: {data['voltage_V']} V, {data['current_mA']} mA, "
+            f"{level} ({data['ts']})"
+        )
+    elif not quiet:
+        print(json.dumps(data, ensure_ascii=False))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+"""Alerta de batería baja para begonia (mainline, sin fuel gauge).
+
+Lee /run/begonia-battery.json (lo escribe begonia-battery-iio.timer) y emite el
+aviso por stdout, o NO_REPLY si no procede. La automatización de OpenClaw lo
+ejecuta cada 10 min y suprime el envío cuando la salida es solo NO_REPLY.
+
+Solo avisa descargando (ac_online=false) por debajo de 3,55 V o <10 %, con
+cooldown de 45 min. Con cargador puesto no avisa: la tensión de terminal está
+clavada en el CV (4,35 V) y no representa el estado de carga.
+
+Uso: begonia-battery-alert [json] [state]
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import sys
+import time
+
+JSON_PATH = sys.argv[1] if len(sys.argv) > 1 else "/run/begonia-battery.json"
+STATE_PATH = (
+    sys.argv[2]
+    if len(sys.argv) > 2
+    else os.path.expanduser("~/.openclaw/state/begonia-battery-alert.last")
+)
+COOLDOWN_S = 45 * 60
+LOW_MV = 3550
+LOW_PCT = 10
+
+
+def silent() -> None:
+    print("NO_REPLY")
+    raise SystemExit(0)
+
+
+def main() -> None:
+    try:
+        with open(JSON_PATH, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+    except (OSError, ValueError):
+        silent()
+
+    mv = data.get("voltage_mV")
+    if not isinstance(mv, (int, float)) or not 2500 <= mv <= 5000:
+        silent()
+
+    # Solo tiene sentido descargando; con AC el CV fija la tensión.
+    if data.get("ac_online") is not False:
+        silent()
+
+    pct = data.get("capacity_pct")
+    pct_num = float(pct) if isinstance(pct, (int, float)) else None
+    low = mv < LOW_MV or (pct_num is not None and pct_num < LOW_PCT)
+    if not low:
+        silent()
+
+    now = int(time.time())
+    try:
+        with open(STATE_PATH, "r", encoding="utf-8") as fh:
+            last = int(fh.read().strip() or "0")
+    except (OSError, ValueError):
+        last = 0
+    if now - last < COOLDOWN_S:
+        silent()
+
+    level = f"{int(pct_num)}%" if pct_num is not None else f"{round(mv)} mV"
+    print(
+        f"BATERIA begonia: {level} (descargando, {mv / 1000:.2f} V). "
+        "Riesgo de apagado por voltaje bajo; enchufa un cargador de pared >=1,5 A."
+    )
+    try:
+        os.makedirs(os.path.dirname(STATE_PATH), exist_ok=True)
+        with open(STATE_PATH, "w", encoding="utf-8") as fh:
+            fh.write(f"{now}\n")
+    except OSError:
+        pass
+
+
+if __name__ == "__main__":
+    main()

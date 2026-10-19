@@ -12,6 +12,7 @@ Power draw: optional, reads from battery energy_rate if available
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 import time
 from collections import deque
@@ -720,7 +721,7 @@ class BatteryCollector(MetricCollector):
         }
 
         if not batteries:
-            return result
+            return self._collect_iio(result)
 
         # Aggregate from sysfs
         total_pct = 0
@@ -889,6 +890,44 @@ class BatteryCollector(MetricCollector):
         result["charging"] = charge_state in ("charging", "full")
         result["discharging"] = charge_state == "discharging"
 
+        return result
+
+    def _collect_iio(self, result: dict) -> dict:
+        """Fallback sin fuel gauge: JSON de begonia-battery-iio (MT6359).
+
+        begonia no tiene /sys/class/power_supply/battery en mainline 6.16/7.1;
+        el timer begonia-battery-iio.timer publica tensión/corriente desde el
+        ADC del PMIC en /run/begonia-battery.json.
+        """
+        try:
+            with open("/run/begonia-battery.json", "r", encoding="utf-8") as fh:
+                data = json.load(fh)
+        except (OSError, ValueError):
+            return result
+
+        mv = data.get("voltage_mV")
+        if not isinstance(mv, (int, float)) or not 2500 <= mv <= 5000:
+            return result
+
+        online = data.get("ac_online")
+        state = str(data.get("state") or "unknown").lower()
+        pct = data.get("capacity_pct")
+        pct = int(pct) if isinstance(pct, (int, float)) else None
+
+        result.update({
+            "percentage": pct,
+            "state": state,
+            "voltage": round(float(mv) / 1000.0, 3),
+            "online": bool(online),
+            "charging": state == "charging",
+            "discharging": state == "discharging",
+            "vendor": "MT6359 auxadc",
+            "model": "begonia (mainline, sin fuel gauge)",
+            "icon_name": "battery",
+            "battery_state": state,
+        })
+        if pct is not None:
+            result["battery_level"] = f"{pct}%"
         return result
 
     def _discover_batteries(self) -> List[str]:

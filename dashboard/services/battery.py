@@ -3,6 +3,7 @@ Battery, thermal, and CPU frequency management.
 """
 import subprocess
 import os
+import json
 
 from dashboard.dependencies import run_command, run_sudo_command
 
@@ -36,10 +37,56 @@ THERMAL_NAME_MAP = {
 }
 
 
+def _iio_battery() -> dict | None:
+    """Batería sin fuel gauge: JSON de begonia-battery-iio (MT6359 auxadc).
+
+    mainline 6.16/7.1 no crea /sys/class/power_supply/battery; upower solo ve
+    line_power. El timer begonia-battery-iio.timer publica tensión/corriente.
+    """
+    try:
+        with open("/run/begonia-battery.json", "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+    except (OSError, ValueError):
+        return None
+
+    mv = data.get("voltage_mV")
+    if not isinstance(mv, (int, float)) or not 2500 <= mv <= 5000:
+        return None
+
+    pct = data.get("capacity_pct")
+    pct = int(pct) if isinstance(pct, (int, float)) else None
+    state = str(data.get("state") or "unknown").capitalize()
+
+    return {
+        "percentage": pct,
+        "state": state,
+        "voltage": round(float(mv) / 1000.0, 3),
+        "voltage_min_design": None,
+        "voltage_max_design": None,
+        "time_to_empty": None,
+        "time_to_full": None,
+        "energy": None,
+        "energy_full": None,
+        "energy_full_design": None,
+        "energy_rate": None,
+        "capacity": None,
+        "temperature": None,
+        "serial": None,
+        "vendor": "MT6359 auxadc",
+        "model": "begonia (mainline, sin fuel gauge)",
+        "technology": "Li-ion",
+        "charge_cycles": None,
+        "icon_name": "battery",
+        "current_ma": data.get("current_mA"),
+        "note": "Tensión/corriente del PMIC; % solo se estima descargando",
+    }
+
+
 def get_battery_info() -> dict:
     """
     Get battery information using upower.
     """
+    iio = _iio_battery()
     # Find battery device
     code, out, err = run_command(["upower", "-e"], timeout=10)
     battery_path = None
@@ -56,7 +103,7 @@ def get_battery_info() -> dict:
     # Get detailed info
     code, out, err = run_command(["upower", "-i", battery_path], timeout=10)
     if code != 0:
-        return {"error": err, "note": "upower not available or battery not found"}
+        return iio or {"error": err, "note": "upower not available or battery not found"}
 
     info = {}
     current_key = None
@@ -180,6 +227,11 @@ def get_battery_info() -> dict:
                 pass
         elif "icon-name" in key.lower() or "icon_name" in key.lower():
             result["icon_name"] = value
+
+    # upower ve un "battery_qcom_battery" vacío (0%, "(null)"): sin fuel gauge
+    # real, preferir la telemetría del MT6359 si la hay.
+    if iio and result.get("percentage") is None and result.get("voltage") is None:
+        return iio
 
     return result
 
