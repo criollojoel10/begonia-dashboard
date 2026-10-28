@@ -23,7 +23,6 @@ from dashboard.config import (
     AUTH_ENABLED,
     HOST,
     PORT,
-    VIVI_FITNESS_URL,
 )
 from dashboard.auth.session import UserSession, session_store
 from dashboard.auth.deps import get_current_session, require_session
@@ -80,7 +79,6 @@ def _brand_context() -> dict:
         "derivation_notice": branding.DERIVATION_NOTICE,
         "bind_host": HOST,
         "bind_port": PORT,
-        "vivi_fitness_url": VIVI_FITNESS_URL,
     }
 
 
@@ -199,13 +197,14 @@ templates = Templates(templates_dir)
 
 
 # Import route modules after app creation to avoid circular imports
-from dashboard.api import auth, system, device, live  # noqa: E402
+from dashboard.api import auth, system, device, live, mesh  # noqa: E402
 
 # Register API routers
 app.include_router(auth.router)
 app.include_router(system.router, prefix="/api")
 app.include_router(device.router, prefix="/api")
 app.include_router(live.router, prefix="/api")
+app.include_router(mesh.router, prefix="/api")
 
 
 # Login page route (public)
@@ -238,6 +237,7 @@ PAGES: dict[str, tuple[str, str]] = {
     "/packages": ("packages.html", "Package management"),
     "/users": ("users.html", "User management"),
     "/power": ("power.html", "Power controls"),
+    "/nodes": ("nodes.html", "Mesh nodes status"),
 }
 
 

@@ -9,9 +9,9 @@ Begonia Dashboard is a fork of Lavender by minhazul73 (MIT). The upstream
 credit is a license requirement: do not remove it.
 """
 
-APP_NAME = "Begonia Dashboard"
-APP_SHORT_NAME = "Begonia"
-APP_SUBTITLE = "Redmi Note 8 Pro"
+APP_NAME = "Vivi Mesh"
+APP_SHORT_NAME = "Vivi Mesh"
+APP_SUBTITLE = "begonia \u00b7 laurel \u00b7 ruby"
 APP_IDENTITY = "Vivi-AI Infrastructure"
 
 UPSTREAM_NAME = "Lavender"

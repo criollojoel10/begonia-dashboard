@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Mesh Nodes — Vivi Mesh{% endblock %}
+{% block page_title %}Mesh Nodes{% endblock %}
+
+{% block content %}
+<p style="margin-bottom:12px; color: var(--text-muted, #888);">
+  Estado agregado de los tres nodos (begonia, laurel, ruby): disponibilidad,
+  métricas, procesos NATS y lease del Gateway. Se refresca cada 30 s.
+</p>
+
+<div id="cluster" class="card" style="margin-bottom:16px; padding:12px;"></div>
+
+<div id="nodes" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:12px;"></div>
+
+<script>
+async function loadMesh() {
+  try {
+    const r = await fetch('/api/mesh', {cache:'no-store'});
+    const d = await r.json();
+    renderCluster(d.cluster || {});
+    renderNodes(d.nodes || []);
+  } catch (e) {
+    document.getElementById('nodes').innerHTML = '<div class="card">Error: ' + e + '</div>';
+  }
+}
+function fmtUptime(s) {
+  if (!s) return '—';
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60);
+  if (h >= 24) return Math.floor(h/24) + 'd ' + (h%24) + 'h';
+  return h + 'h ' + m + 'm';
+}
+function renderCluster(c) {
+  const lease = c.lease || {};
+  const html = `
+    <h3 style="margin:0 0 8px 0;">Cluster (NATS / HA)</h3>
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap:8px; font-size:13px;">
+      <div><b>Meta leader:</b> ${c.meta_leader || '—'}</div>
+      <div><b>Cluster size:</b> ${c.cluster_size || '—'}</div>
+      <div><b>Quorum needed:</b> ${c.quorum_needed || '—'}</div>
+      <div><b>KV leader:</b> ${c.kv_leader || '—'}</div>
+      <div><b>Lease holder:</b> ${lease.holder || '—'}</div>
+      <div><b>Epoch:</b> ${lease.epoch || '—'}</div>
+      <div><b>Mode:</b> ${lease.mode || '—'}</div>
+      <div><b>Renewed:</b> ${lease.renewed_at || '—'}</div>
+    </div>`;
+  document.getElementById('cluster').innerHTML = html;
+}
+function renderNodes(nodes) {
+  const container = document.getElementById('nodes');
+  container.innerHTML = nodes.map(n => {
+    const ok = n.reachable;
+    const badge = ok ? '<span style="color:#2ecc71;">● online</span>' : '<span style="color:#e74c3c;">● offline</span>';
+    const memUsed = n.mem_total_mb ? (n.mem_total_mb - (n.mem_avail_mb||0)) : 0;
+    const memPct = n.mem_total_mb ? Math.round(memUsed/n.mem_total_mb*100) : 0;
+    return `
+    <div class="card" style="padding:12px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <h3 style="margin:0;">${n.node}</h3>
+        ${badge}
+      </div>
+      <div style="font-size:13px; line-height:1.7;">
+        <div><b>Uptime:</b> ${fmtUptime(n.uptime_s)}</div>
+        <div><b>Load (1m):</b> ${n.load1 != null ? n.load1.toFixed(2) : '—'}</div>
+        <div><b>RAM:</b> ${memUsed} / ${n.mem_total_mb||0} MB (${memPct}%)</div>
+        <div><b>Available:</b> ${n.mem_avail_mb||0} MB</div>
+        <div><b>NATS pids:</b> ${(n.nats_pids||[]).join(', ') || 'none'}</div>
+        ${n.error ? '<div style="color:#e74c3c;"><b>Error:</b> ' + n.error + '</div>' : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+loadMesh();
+setInterval(loadMesh, 30000);
+</script>
+{% endblock %}
