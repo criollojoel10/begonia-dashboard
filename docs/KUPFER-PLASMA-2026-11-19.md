@@ -154,10 +154,62 @@ sudo install -m644 scripts/host/begonia-usb-nat.service /etc/systemd/system/
 sudo systemctl enable --now begonia-usb-nat
 ```
 
+## Brillo y batería (2026-11-19)
+
+### Brillo: funciona
+
+```
+/sys/class/backlight/lm36274-backlight  max=1879
+powerdevil BrightnessControl            min=0 max=10000
+setBrightness(1500) -> brightness=1200 (verificado en sysfs)
+```
+
+El control de Plasma escribe en el backlight a través de powerdevil; no hace falta udev
+extra. El único detalle es que, con la pantalla en `DPMS=Off` por inactividad, los
+valores que se leen del sysfs no reflejan lo que se pide (es el dimming, no un fallo).
+Con la pantalla encendida el mapeo es correcto.
+
+Default persistido: `800/1879` (~43 %) en
+`/var/lib/systemd/backlight/platform-11007000.i2c-platform-lm36274-backlight.5.auto:backlight:lm36274-backlight`
+(`systemd-backlight@backlight:lm36274-backlight` lo restaura en cada arranque).
+
+### Batería: no hay gauge en el kernel 7.1.0
+
+`/sys/class/power_supply` sólo expone `mt6360-chg` (TYPE=USB, `ONLINE`, `voltage_now`)
+y el `tcpm-source`. No hay nodo `battery` ni `capacity`, y `CONFIG_*GAUGE*` no está en
+el kernel que corre. UPower sólo ve "line power"; Plasma no puede mostrar porcentaje.
+
+Lo que existe para maniobrar (API de GitLab, `glab api`):
+
+- Proyecto `mt6785-mainline/linux` (GitLab `gitlab.postmarketos.org`, id 780).
+- Rama **`battery-downstream`**: trae el stack completo importado del vendor:
+  - `power: supply: mt6359p-gauge: Import from downstream` y renombrado a `mt6359-gauge`
+  - `power: supply: mtk-battery*: Import from downstream`
+  - `mfd: mt6397-core: Add support for gauge on MT6359 PMICs`
+  - `rtc: mt6397: Implement nvmem`
+  - `iio: adc: mt6359-auxadc: Switch to IIO_CHAN_INFO_PROCESSED`
+  - `power: supply: mt6360_charger: Provide state updates for battery from charger`
+  - `arm64: dts: mt6785-xiaomi-begonia: Enable pmic fuel gauge and battery manager`
+    (nodo `battery-manager` + `mt6359_gauge` + perfiles `battery0_profile_t*`)
+- Esa rama está basada en **6.16**, no en 7.1: `mt6359-gauge.c` da 404 en `7.1` y el
+  compare inverso arrastra decenas de miles de commits. **No está mergeada.**
+
+Para tener porcentaje real en Plasma hay dos caminos, ambos requieren reconstruir el
+boot image:
+
+1. **Rebasar la serie de batería sobre `7.1`** + los parches conn/WiFi de Kupfer y
+   recompilar `linux-mt6785` (lo correcto a futuro).
+2. **Construir sobre `battery-downstream` (6.16)** + la serie conn de 6.16 (lo que ya
+   funcionaba antes del salto a 7.1), aceptando volver a 6.16.
+
+Mientras tanto, el único dato de batería disponible es el canal IIO `batt_v` del
+MT6359 (`/sys/bus/iio/devices/iio:device0/in_voltage12_raw`, `_scale` = 6300), que hoy
+es crudo porque el cambio a `IIO_CHAN_INFO_PROCESSED` vive justamente en la rama de
+batería. Serviría para una estimación por voltaje, nunca para el indicador nativo.
+
 ## Problemas conocidos
 
-- **Batería**: no hay nodo de fuel gauge (igual que en 6.16); `power_supply` sólo expone
-  cargador USB.
+- **Batería**: sin gauge (ver arriba); `power_supply` sólo expone cargador USB.
 - **SDDM**: instalado pero deshabilitado; el arranque va por getty autologin.
 - **Panel/táctil Tianma**: el DTB de esta unidad es CSOT
   (`xiaomi,begonia-csot-nt36672a`), así que el nombre que pide el kernel es
