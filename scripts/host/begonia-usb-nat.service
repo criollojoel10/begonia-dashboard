@@ -1,0 +1,13 @@
+[Unit]
+Description=Share host uplink with begonia over USB (NAT)
+After=network-online.target ufw.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/begonia-usb-nat up
+ExecStop=/usr/local/sbin/begonia-usb-nat down
+
+[Install]
+WantedBy=multi-user.target

@@ -443,3 +443,18 @@ Begonia Dashboard is maintained by [criollojoel10](https://github.com/criollojoe
 and Linux devices by [rahat](https://github.com/minhazul73).
 
 Powered by FastAPI, Uvicorn, and vanilla JavaScript.
+
+---
+
+## Device provisioning
+
+The `begonia` unit (Redmi Note 8 Pro, MT6785) runs a clean Arch Linux ARM rootfs with
+the Kupfer 7.1.0 kernel and Plasma Mobile 6.8.3. The reproducible build, the flashing
+procedure, the USB-NAT setup and the measured state are in
+[docs/KUPFER-PLASMA-2026-11-19.md](docs/KUPFER-PLASMA-2026-11-19.md).
+
+Scripts:
+
+- `scripts/build-kupfer-plasma-rootfs.sh` — builds the rootfs image (root + qemu-user).
+- `scripts/flash-kupfer-plasma.sh` — wipes `userdata` and flashes boot/rootfs/vbmeta.
+- `scripts/host/begonia-usb-nat*` — shares the host uplink with the phone over USB.
