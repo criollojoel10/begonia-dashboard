@@ -449,9 +449,11 @@ Powered by FastAPI, Uvicorn, and vanilla JavaScript.
 ## Device provisioning
 
 The `begonia` unit (Redmi Note 8 Pro, MT6785) runs a clean Arch Linux ARM rootfs with
-the Kupfer 7.1.0 kernel and Plasma Mobile 6.8.3. The reproducible build, the flashing
-procedure, the USB-NAT setup and the measured state are in
-[docs/KUPFER-PLASMA-2026-11-19.md](docs/KUPFER-PLASMA-2026-11-19.md).
+the Kupfer 7.1.0 kernel and **Phosh** (Plasma Mobile was retired). The reproducible
+build, the flashing procedure, the USB-NAT setup and the measured state are in
+[docs/KUPFER-PLASMA-2026-11-19.md](docs/KUPFER-PLASMA-2026-11-19.md); the final Phosh
+state, touch/WiFi/performance notes and the remaining kernel gaps (audio, battery) are
+in [docs/PHOSH-2026-11-20.md](docs/PHOSH-2026-11-20.md).
 
 Scripts:
 
